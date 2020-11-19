@@ -31,7 +31,7 @@
 		6E68E7032566C8500056D6D8 /* Shader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Shader.cpp; sourceTree = "<group>"; };
 		6E68E7092566C97A0056D6D8 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = SOURCE_ROOT; };
 		6E70A00B254E9BBB00F03F67 /* ShadowFragmentShaderCode.glsl */ = {isa = PBXFileReference; lastKnownFileType = text; path = ShadowFragmentShaderCode.glsl; sourceTree = "<group>"; };
-		6EC621462546674700988D55 /* Assignment2 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Assignment2; sourceTree = BUILT_PRODUCTS_DIR; };
+		6EC621462546674700988D55 /* 3260_proj */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = 3260_proj; sourceTree = BUILT_PRODUCTS_DIR; };
 		6EC621492546674700988D55 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		6EC62152254667CB00988D55 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
 		6EC621542546680B00988D55 /* libGLEW.2.1.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libGLEW.2.1.0.dylib; path = ../../../../../usr/local/Cellar/glew/2.1.0_1/lib/libGLEW.2.1.0.dylib; sourceTree = "<group>"; };
@@ -63,7 +63,7 @@
 		6EC6213D2546674700988D55 = {
 			isa = PBXGroup;
 			children = (
-				6EC621482546674700988D55 /* Assignment2 */,
+				6EC621482546674700988D55 /* 3260_proj */,
 				6EC621472546674700988D55 /* Products */,
 				6EC62151254667CB00988D55 /* Frameworks */,
 			);
@@ -72,12 +72,12 @@
 		6EC621472546674700988D55 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				6EC621462546674700988D55 /* Assignment2 */,
+				6EC621462546674700988D55 /* 3260_proj */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		6EC621482546674700988D55 /* Assignment2 */ = {
+		6EC621482546674700988D55 /* 3260_proj */ = {
 			isa = PBXGroup;
 			children = (
 				6EC621492546674700988D55 /* main.cpp */,
@@ -93,7 +93,7 @@
 				6E70A00B254E9BBB00F03F67 /* ShadowFragmentShaderCode.glsl */,
 				6E68E7092566C97A0056D6D8 /* README.md */,
 			);
-			path = Assignment2;
+			path = 3260_proj;
 			sourceTree = "<group>";
 		};
 		6EC62151254667CB00988D55 /* Frameworks */ = {
@@ -109,9 +109,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		6EC621452546674700988D55 /* Assignment2 */ = {
+		6EC621452546674700988D55 /* 3260_proj */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 6EC6214D2546674700988D55 /* Build configuration list for PBXNativeTarget "Assignment2" */;
+			buildConfigurationList = 6EC6214D2546674700988D55 /* Build configuration list for PBXNativeTarget "3260_proj" */;
 			buildPhases = (
 				6EC621422546674700988D55 /* Sources */,
 				6EC621432546674700988D55 /* Frameworks */,
@@ -121,9 +121,9 @@
 			);
 			dependencies = (
 			);
-			name = Assignment2;
+			name = 3260_proj;
 			productName = Assignment2;
-			productReference = 6EC621462546674700988D55 /* Assignment2 */;
+			productReference = 6EC621462546674700988D55 /* 3260_proj */;
 			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
@@ -139,7 +139,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 6EC621412546674700988D55 /* Build configuration list for PBXProject "Assignment2" */;
+			buildConfigurationList = 6EC621412546674700988D55 /* Build configuration list for PBXProject "3260_proj" */;
 			compatibilityVersion = "Xcode 9.3";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -152,7 +152,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				6EC621452546674700988D55 /* Assignment2 */,
+				6EC621452546674700988D55 /* 3260_proj */,
 			);
 		};
 /* End PBXProject section */
@@ -313,7 +313,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		6EC621412546674700988D55 /* Build configuration list for PBXProject "Assignment2" */ = {
+		6EC621412546674700988D55 /* Build configuration list for PBXProject "3260_proj" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				6EC6214B2546674700988D55 /* Debug */,
@@ -322,7 +322,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		6EC6214D2546674700988D55 /* Build configuration list for PBXNativeTarget "Assignment2" */ = {
+		6EC6214D2546674700988D55 /* Build configuration list for PBXNativeTarget "3260_proj" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				6EC6214E2546674700988D55 /* Debug */,

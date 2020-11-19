@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "6EC621452546674700988D55"
-               BuildableName = "Assignment2"
-               BlueprintName = "Assignment2"
-               ReferencedContainer = "container:Assignment2.xcodeproj">
+               BuildableName = "3260_proj"
+               BlueprintName = "3260_proj"
+               ReferencedContainer = "container:3260_proj.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -36,7 +36,7 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
       useCustomWorkingDirectory = "YES"
-      customWorkingDirectory = "/Users/patrickchen/Documents/GitHub/3260_proj/Assignment2"
+      customWorkingDirectory = "/Users/patrickchen/Documents/GitHub/3260_proj/3260_proj"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
       debugServiceExtension = "internal"
@@ -46,9 +46,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "6EC621452546674700988D55"
-            BuildableName = "Assignment2"
-            BlueprintName = "Assignment2"
-            ReferencedContainer = "container:Assignment2.xcodeproj">
+            BuildableName = "3260_proj"
+            BlueprintName = "3260_proj"
+            ReferencedContainer = "container:3260_proj.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -63,9 +63,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "6EC621452546674700988D55"
-            BuildableName = "Assignment2"
-            BlueprintName = "Assignment2"
-            ReferencedContainer = "container:Assignment2.xcodeproj">
+            BuildableName = "3260_proj"
+            BlueprintName = "3260_proj"
+            ReferencedContainer = "container:3260_proj.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>
