@@ -1,7 +1,11 @@
 /*
-Student Information
-Student ID: 1155124421
-Student Name: CHEN Tianhao
+Group Information
+Student ID:
+ 1155124421
+ 1155124275
+Student Name:
+ CHEN Tianhao
+ TANG Zizhou
 */
 
 #include <GL/glew.h>
@@ -18,6 +22,9 @@ Student Name: CHEN Tianhao
 #include <fstream>
 #include <vector>
 #include <map>
+#include <cstdio>
+#include <cstdlib>
+
 
 // screen setting
 const int SCR_WIDTH = 800;
@@ -63,7 +70,7 @@ struct MouseController{
     int click_time = glfwGetTime();
 };
 
-Object* objects = (Object*)malloc(sizeof(Object) * 3);
+Object* objects = (Object*)malloc(sizeof(Object) * 20);
 GLuint shadowFrameBuffer = 0;
 
 Shader Shader0;
@@ -73,12 +80,25 @@ Texture Texture1;
 Texture Texture2;
 Texture Texture3;
 Texture Texture4;
+
+Texture textureSpacecraft_i;
+Texture textureSpacecraft_f;
+Texture textureAlienPeople;
+Texture textureAlienVehicle;
+Texture texturePlanet;
+
 unsigned int depthMapFBO;
 unsigned int depthMap;
 
 Model dolphin;
 Model sea;
 Model tower;
+
+//newly added
+Model spaceCraft;
+Model alienPeople;
+Model alienVehicle;
+Model planet;
 
 Camera cam;
 
@@ -195,6 +215,24 @@ Model loadOBJ(const char* objPath)
     return model;
 }
 
+//avoid repeating
+void load_Data(Model model, int id){
+    glGenVertexArrays(1, &objects[id].vaoID);
+    glBindVertexArray(objects[id].vaoID);
+    glGenBuffers(1, &objects[id].vboID);
+    glBindBuffer(GL_ARRAY_BUFFER, objects[id].vboID);
+    glBufferData(GL_ARRAY_BUFFER, model.vertices.size() * sizeof(Vertex), &model.vertices[0], GL_STATIC_DRAW);
+    glGenBuffers(1, &objects[id].eboID);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[id].eboID);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, model.indices.size() * sizeof(unsigned int), &model.indices[0], GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position));
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
+}
+
 void get_OpenGL_info()
 {
     // OpenGL information
@@ -206,20 +244,89 @@ void get_OpenGL_info()
     std::cout << "OpenGL version: " << glversion << std::endl;
 }
 
+
 void sendDataToOpenGL()
 {
     //TODO
     //Load objects and bind to VAO and VBO
     //Load textures
-    dolphin = loadOBJ("./resources/dolphin/dolphin.obj");
-    glGenVertexArrays(1, &objects[0].vaoID);
-    glBindVertexArray(objects[0].vaoID);
-    glGenBuffers(1, &objects[0].vboID);
-    glBindBuffer(GL_ARRAY_BUFFER, objects[0].vboID);
-    glBufferData(GL_ARRAY_BUFFER, dolphin.vertices.size() * sizeof(Vertex), &dolphin.vertices[0], GL_STATIC_DRAW);
-    glGenBuffers(1, &objects[0].eboID);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[0].eboID);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, dolphin.indices.size() * sizeof(unsigned int), &dolphin.indices[0], GL_STATIC_DRAW);
+//    dolphin = loadOBJ("./resources/dolphin/dolphin.obj");
+//    glGenVertexArrays(1, &objects[0].vaoID);
+//    glBindVertexArray(objects[0].vaoID);
+//    glGenBuffers(1, &objects[0].vboID);
+//    glBindBuffer(GL_ARRAY_BUFFER, objects[0].vboID);
+//    glBufferData(GL_ARRAY_BUFFER, dolphin.vertices.size() * sizeof(Vertex), &dolphin.vertices[0], GL_STATIC_DRAW);
+//    glGenBuffers(1, &objects[0].eboID);
+//    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[0].eboID);
+//    glBufferData(GL_ELEMENT_ARRAY_BUFFER, dolphin.indices.size() * sizeof(unsigned int), &dolphin.indices[0], GL_STATIC_DRAW);
+//    glEnableVertexAttribArray(0);
+//    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position));
+//    glEnableVertexAttribArray(1);
+//    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
+//    glEnableVertexAttribArray(2);
+//    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
+//
+//    sea = loadOBJ("./resources/sea/sea.obj");
+//    glGenVertexArrays(1, &objects[1].vaoID);
+//    glBindVertexArray(objects[1].vaoID);
+//    glGenBuffers(1, &objects[1].vboID);
+//    glBindBuffer(GL_ARRAY_BUFFER, objects[1].vboID);
+//    glBufferData(GL_ARRAY_BUFFER, sea.vertices.size() * sizeof(Vertex), &sea.vertices[0], GL_STATIC_DRAW);
+//    glGenBuffers(1, &objects[1].eboID);
+//    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[1].eboID);
+//    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sea.indices.size() * sizeof(unsigned int), &sea.indices[0], GL_STATIC_DRAW);
+//    glEnableVertexAttribArray(0);
+//    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position));
+//    glEnableVertexAttribArray(1);
+//    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
+//    glEnableVertexAttribArray(2);
+//    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
+//
+//    tower = loadOBJ("./resources/tower/boat.obj");
+//    glGenVertexArrays(1, &objects[2].vaoID);
+//    glBindVertexArray(objects[2].vaoID);
+//    glGenBuffers(1, &objects[2].vboID);
+//    glBindBuffer(GL_ARRAY_BUFFER, objects[2].vboID);
+//    glBufferData(GL_ARRAY_BUFFER, tower.vertices.size() * sizeof(Vertex), &tower.vertices[0], GL_STATIC_DRAW);
+//    glGenBuffers(1, &objects[2].eboID);
+//    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[2].eboID);
+//    glBufferData(GL_ELEMENT_ARRAY_BUFFER, tower.indices.size() * sizeof(unsigned int), &tower.indices[0], GL_STATIC_DRAW);
+//    glEnableVertexAttribArray(0);
+//    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position));
+//    glEnableVertexAttribArray(1);
+//    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
+//    glEnableVertexAttribArray(2);
+//    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
+    
+    
+//spacecraft
+    spaceCraft = loadOBJ("./resources/spacecraft/spacecraft.obj");
+//    spaceCraft = loadOBJ("./resources/alienpeople/alienpeople.obj");
+    glGenVertexArrays(1, &objects[3].vaoID);
+    glBindVertexArray(objects[3].vaoID);
+    glGenBuffers(1, &objects[3].vboID);
+    glBindBuffer(GL_ARRAY_BUFFER, objects[3].vboID);
+    glBufferData(GL_ARRAY_BUFFER, spaceCraft.vertices.size() * sizeof(Vertex), &spaceCraft.vertices[0], GL_STATIC_DRAW);
+    glGenBuffers(1, &objects[3].eboID);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[3].eboID);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, spaceCraft.indices.size() * sizeof(unsigned int), &spaceCraft.indices[0], GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position));
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
+
+//alienpeople
+    alienPeople = loadOBJ("./resources/alienpeople/alienpeople.obj");
+    glGenVertexArrays(1, &objects[4].vaoID);
+    glBindVertexArray(objects[4].vaoID);
+    glGenBuffers(1, &objects[4].vboID);
+    glBindBuffer(GL_ARRAY_BUFFER, objects[4].vboID);
+    glBufferData(GL_ARRAY_BUFFER, alienPeople.vertices.size() * sizeof(Vertex), &alienPeople.vertices[0], GL_STATIC_DRAW);
+    glGenBuffers(1, &objects[4].eboID);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[4].eboID);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, alienPeople.indices.size() * sizeof(unsigned int), &alienPeople.indices[0], GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position));
     glEnableVertexAttribArray(1);
@@ -227,43 +334,27 @@ void sendDataToOpenGL()
     glEnableVertexAttribArray(2);
     glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
     
-    sea = loadOBJ("./resources/sea/sea.obj");
-    glGenVertexArrays(1, &objects[1].vaoID);
-    glBindVertexArray(objects[1].vaoID);
-    glGenBuffers(1, &objects[1].vboID);
-    glBindBuffer(GL_ARRAY_BUFFER, objects[1].vboID);
-    glBufferData(GL_ARRAY_BUFFER, sea.vertices.size() * sizeof(Vertex), &sea.vertices[0], GL_STATIC_DRAW);
-    glGenBuffers(1, &objects[1].eboID);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[1].eboID);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sea.indices.size() * sizeof(unsigned int), &sea.indices[0], GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position));
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
+//alien vehicle
+    alienVehicle = loadOBJ("./resources/alienvehicle/alienvehicle.obj");
+    load_Data(alienVehicle, 5);
     
-    tower = loadOBJ("./resources/tower/boat.obj");
-    glGenVertexArrays(1, &objects[2].vaoID);
-    glBindVertexArray(objects[2].vaoID);
-    glGenBuffers(1, &objects[2].vboID);
-    glBindBuffer(GL_ARRAY_BUFFER, objects[2].vboID);
-    glBufferData(GL_ARRAY_BUFFER, tower.vertices.size() * sizeof(Vertex), &tower.vertices[0], GL_STATIC_DRAW);
-    glGenBuffers(1, &objects[2].eboID);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[2].eboID);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, tower.indices.size() * sizeof(unsigned int), &tower.indices[0], GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position));
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
+//planet
+    planet = loadOBJ("./resources/planet/planet.obj");
+    load_Data(planet, 6);
     
-    Texture0.setupTexture("./resources/dolphin/dolphin_01.jpg");
-    Texture1.setupTexture("./resources/sea/sea_01.jpg");
-    Texture2.setupTexture("./resources/dolphin/dolphin_02.jpg");
-    Texture3.setupTexture("./resources/sea/sea_02.jpg");
-    Texture4.setupTexture("./resources/tower/wood2.jpg");
+    
+    
+//    Texture0.setupTexture("./resources/dolphin/dolphin_01.jpg");
+//    Texture1.setupTexture("./resources/sea/sea_01.jpg");
+//    Texture2.setupTexture("./resources/dolphin/dolphin_02.jpg");
+//    Texture3.setupTexture("./resources/sea/sea_02.jpg");
+//    Texture4.setupTexture("./resources/tower/wood2.jpg");
+    
+    textureSpacecraft_i.setupTexture("./resources/spacecraft/spacecraftTexture.bmp");
+    textureAlienPeople.setupTexture("./resources/alienpeople/alienTexture.bmp");
+    textureAlienVehicle.setupTexture("./resources/alienvehicle/colorful_alien_vehicleTexture.bmp");
+    texturePlanet.setupTexture("./resources/planet/planetTexture.bmp");
+    
     
     //Set up shadow texture
     glGenFramebuffers(1, &depthMapFBO);
@@ -305,6 +396,9 @@ void initializedGL(void) //run only once
 
 void paintGL(void)  //always run
 {
+    //for debug purpose
+//    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    
     glm::mat4 modelTransformMatrix = glm::mat4(1.0f);
     GLint modelTransformMatrixUniformLocation = glGetUniformLocation(Shader0.ID, "modelTransformMatrix");
     
@@ -321,6 +415,25 @@ void paintGL(void)  //always run
     glm::mat4 viewMatrix = cam.GetViewMatrix();
     projectionMatrix = projectionMatrix * viewMatrix;
     glm::vec3 lightPosition(0.5f, 2.0f, 2.0f);
+    
+    //spacecraft
+    glm::mat4 spacecraftPreScaleMatrix = glm::mat4(1.0f);
+    spacecraftPreScaleMatrix = glm::scale(spacecraftPreScaleMatrix, glm::vec3(0.002f,0.002f,0.002f));
+    glm::mat4 spacecraftPreRotateMatrix = glm::mat4(1.0f);
+    spacecraftPreRotateMatrix = glm::rotate(spacecraftPreRotateMatrix,glm::radians(180.0f), glm::vec3(1.0f,0.0f,0.0f));
+    
+    //alienpeople
+    glm::mat4 alienPeoplePrescaleMatrix = glm::scale(glm::mat4(1.0f),glm::vec3(0.25f,0.25f,0.25f));
+    
+    //alienvehicle
+    glm::mat4 alienVehiclePrescaleMatrix = glm::scale(glm::mat4(1.0f),glm::vec3(0.15f,0.15f,0.15f));
+    
+    //alientranslate matrix
+    glm::mat4 alienTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-2.0f,0.0f,-4.0f));
+    
+    //planet setup
+    glm::mat4 planetPrescaleMatrix = glm::scale(glm::mat4(1.0f),glm::vec3(1.5f,1.5f,1.5f));
+    glm::mat4 planetTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f,0.0f,-40.0f));
     
     //render the depth map
     glClearColor(0.53f, 0.81f, 0.98f, 0.5f);
@@ -410,56 +523,112 @@ void paintGL(void)  //always run
     GLuint TextureID = glGetUniformLocation(Shader0.ID, "myTextureSampler0");
     GLuint shadowMapID = glGetUniformLocation(Shader0.ID, "shadowMap");
     
-    glBindVertexArray(objects[0].vaoID);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[0].eboID);
-    modelTransformMatrix =  modelTranslateMatrix * modelPreTranslateMatrix * modelRotateMatrix * modelScaleMatrix * modelPreScaleMatrix;
-    glUniformMatrix4fv(modelTransformMatrixUniformLocation, 1, GL_FALSE, &modelTransformMatrix[0][0]);
-    if(dolphin_texture == 0){
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, Texture0.ID);
-    }
-    else{
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, Texture2.ID);
-    }
-    glUniform1i(TextureID, 0);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, depthMap);
-    glUniform1i(shadowMapID, 1);
-    glDrawElements(GL_TRIANGLES, (int)dolphin.indices.size(), GL_UNSIGNED_INT, 0);
-    glBindTexture(GL_TEXTURE_2D, 0);
+//    glBindVertexArray(objects[0].vaoID);
+//    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[0].eboID);
+//    modelTransformMatrix =  modelTranslateMatrix * modelPreTranslateMatrix * modelRotateMatrix * modelScaleMatrix * modelPreScaleMatrix;
+//    glUniformMatrix4fv(modelTransformMatrixUniformLocation, 1, GL_FALSE, &modelTransformMatrix[0][0]);
+//    if(dolphin_texture == 0){
+//        glActiveTexture(GL_TEXTURE0);
+//        glBindTexture(GL_TEXTURE_2D, Texture0.ID);
+//    }
+//    else{
+//        glActiveTexture(GL_TEXTURE0);
+//        glBindTexture(GL_TEXTURE_2D, Texture2.ID);
+//    }
+//    glUniform1i(TextureID, 0);
+//    glActiveTexture(GL_TEXTURE1);
+//    glBindTexture(GL_TEXTURE_2D, depthMap);
+//    glUniform1i(shadowMapID, 1);
+//    glDrawElements(GL_TRIANGLES, (int)dolphin.indices.size(), GL_UNSIGNED_INT, 0);
+//    glBindTexture(GL_TEXTURE_2D, 0);
+
     
-    glBindVertexArray(objects[1].vaoID);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[1].eboID);
+//    glBindVertexArray(objects[2].vaoID);
+//    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[2].eboID);
+//    modelTransformMatrix = boatModelPreTranslateMatrix * boatModelPreScaleMatrix;
+//    glUniformMatrix4fv(modelTransformMatrixUniformLocation, 1, GL_FALSE, &modelTransformMatrix[0][0]);
+//    glActiveTexture(GL_TEXTURE0);
+//    glBindTexture(GL_TEXTURE_2D, Texture4.ID);
+//    glUniform1i(TextureID, 0);
+//    glActiveTexture(GL_TEXTURE1);
+//    glBindTexture(GL_TEXTURE_2D, depthMap);
+//    glUniform1i(shadowMapID, 1);
+//    glDrawElements(GL_TRIANGLES, (int)tower.indices.size(), GL_UNSIGNED_INT, 0);
+//    glBindTexture(GL_TEXTURE_2D, 0);
+    
+    //space craft
+    glBindVertexArray(objects[3].vaoID);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[3].eboID);
     modelTransformMatrix = glm::mat4(1.0f);
-    glUniformMatrix4fv(modelTransformMatrixUniformLocation, 1, GL_FALSE, &modelTransformMatrix[0][0]);
-    if(sea_texture == 0){
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, Texture1.ID);
-    }
-    else{
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, Texture3.ID);
-    }
-    glUniform1i(TextureID, 0);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, depthMap);
-    glUniform1i(shadowMapID, 1);
-    glDrawElements(GL_TRIANGLES, (int)sea.indices.size(), GL_UNSIGNED_INT, 0);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    
-    glBindVertexArray(objects[2].vaoID);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[2].eboID);
-    modelTransformMatrix = boatModelPreTranslateMatrix * boatModelPreScaleMatrix;
+    modelTransformMatrix = spacecraftPreRotateMatrix * spacecraftPreScaleMatrix * modelTransformMatrix;
     glUniformMatrix4fv(modelTransformMatrixUniformLocation, 1, GL_FALSE, &modelTransformMatrix[0][0]);
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, Texture4.ID);
+    glBindTexture(GL_TEXTURE_2D, textureSpacecraft_i.ID);
     glUniform1i(TextureID, 0);
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, depthMap);
     glUniform1i(shadowMapID, 1);
-    glDrawElements(GL_TRIANGLES, (int)tower.indices.size(), GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, (int)spaceCraft.indices.size(), GL_UNSIGNED_INT, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
+    
+    //alien bundle
+    int num;
+    for (num=0;num<=3;num++)
+    {
+        glm::mat4 selfRotate = glm::rotate(glm::mat4(1.0f), (float)glfwGetTime()/6, glm::vec3(0.0f,1.0f,0.0f));
+        if (num>0)
+        {
+            alienTranslateMatrix = glm::translate(alienTranslateMatrix, glm::vec3(0.0f,0.0f,-8.0f));
+        }
+        //alienpeople
+        glBindVertexArray(objects[4].vaoID);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[4].eboID);
+        modelTransformMatrix = glm::mat4(1.0f);
+        modelTransformMatrix = alienTranslateMatrix * alienPeoplePrescaleMatrix * selfRotate * modelTransformMatrix;
+        glUniformMatrix4fv(modelTransformMatrixUniformLocation, 1, GL_FALSE, &modelTransformMatrix[0][0]);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, textureAlienPeople.ID);
+        glUniform1i(TextureID, 0);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, depthMap);
+        glUniform1i(shadowMapID, 1);
+        glDrawElements(GL_TRIANGLES, (int)alienPeople.indices.size(), GL_UNSIGNED_INT, 0);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        
+        //alienvehicle
+        glBindVertexArray(objects[5].vaoID);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[5].eboID);
+        modelTransformMatrix = glm::mat4(1.0f);
+        modelTransformMatrix = alienTranslateMatrix * alienVehiclePrescaleMatrix * selfRotate * modelTransformMatrix;
+        glUniformMatrix4fv(modelTransformMatrixUniformLocation, 1, GL_FALSE, &modelTransformMatrix[0][0]);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, textureAlienPeople.ID);
+        glUniform1i(TextureID, 0);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, depthMap);
+        glUniform1i(shadowMapID, 1);
+        glDrawElements(GL_TRIANGLES, (int)alienVehicle.indices.size(), GL_UNSIGNED_INT, 0);
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
+    
+    //planet
+    glm::mat4 selfRotate = glm::rotate(glm::mat4(1.0f), (float)glfwGetTime()/6, glm::vec3(0.0f,1.0f,0.0f));
+    glBindVertexArray(objects[6].vaoID);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[6].eboID);
+    modelTransformMatrix = glm::mat4(1.0f);
+    modelTransformMatrix = planetTranslateMatrix * selfRotate * planetPrescaleMatrix * modelTransformMatrix;
+    glUniformMatrix4fv(modelTransformMatrixUniformLocation, 1, GL_FALSE, &modelTransformMatrix[0][0]);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texturePlanet.ID);
+    glUniform1i(TextureID, 0);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, depthMap);
+    glUniform1i(shadowMapID, 1);
+    glDrawElements(GL_TRIANGLES, (int)planet.indices.size(), GL_UNSIGNED_INT, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    
+    
+    
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
