@@ -67,8 +67,9 @@ struct Model {
 
 Object* objects = (Object*)malloc(sizeof(Object) * 20);
 
-Shader Shader0;
-Shader Shader1;
+Shader Shader0; //object shader
+Shader Shader1; //skybox shader
+Shader Shader2; //rock shader
 
 Texture textureSpacecraft_i;
 Texture textureSpacecraft_f;
@@ -76,6 +77,7 @@ Texture textureAlienPeople;
 Texture textureAlienVehicle;
 Texture texturePlanet;
 Texture textureChicken;
+Texture textureRock;
 GLuint cubemapTexture;
 
 int spaceCraftForward = 0;
@@ -87,8 +89,11 @@ Model alienPeople;
 Model alienVehicle;
 Model planet;
 Model chicken;
+Model rock;
 
 Camera cam;
+
+unsigned int amount = 1500;
 
 Model loadOBJ(const char* objPath)
 {
@@ -272,40 +277,10 @@ void sendDataToOpenGL()
     //spacecraft
     spaceCraft = loadOBJ("./resources/spacecraft/spacecraft.obj");
     load_Data(spaceCraft, 3);
-    //    spaceCraft = loadOBJ("./resources/alienpeople/alienpeople.obj");
-    //    glGenVertexArrays(1, &objects[3].vaoID);
-    //    glBindVertexArray(objects[3].vaoID);
-    //    glGenBuffers(1, &objects[3].vboID);
-    //    glBindBuffer(GL_ARRAY_BUFFER, objects[3].vboID);
-    //    glBufferData(GL_ARRAY_BUFFER, spaceCraft.vertices.size() * sizeof(Vertex), &spaceCraft.vertices[0], GL_STATIC_DRAW);
-    //    glGenBuffers(1, &objects[3].eboID);
-    //    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[3].eboID);
-    //    glBufferData(GL_ELEMENT_ARRAY_BUFFER, spaceCraft.indices.size() * sizeof(unsigned int), &spaceCraft.indices[0], GL_STATIC_DRAW);
-    //    glEnableVertexAttribArray(0);
-    //    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position));
-    //    glEnableVertexAttribArray(1);
-    //    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
-    //    glEnableVertexAttribArray(2);
-    //    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
     
-
     //alienpeople
     alienPeople = loadOBJ("./resources/alienpeople/alienpeople.obj");
     load_Data(alienPeople, 4);
-    //    glGenVertexArrays(1, &objects[4].vaoID);
-    //    glBindVertexArray(objects[4].vaoID);
-    //    glGenBuffers(1, &objects[4].vboID);
-    //    glBindBuffer(GL_ARRAY_BUFFER, objects[4].vboID);
-    //    glBufferData(GL_ARRAY_BUFFER, alienPeople.vertices.size() * sizeof(Vertex), &alienPeople.vertices[0], GL_STATIC_DRAW);
-    //    glGenBuffers(1, &objects[4].eboID);
-    //    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[4].eboID);
-    //    glBufferData(GL_ELEMENT_ARRAY_BUFFER, alienPeople.indices.size() * sizeof(unsigned int), &alienPeople.indices[0], GL_STATIC_DRAW);
-    //    glEnableVertexAttribArray(0);
-    //    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position));
-    //    glEnableVertexAttribArray(1);
-    //    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
-    //    glEnableVertexAttribArray(2);
-    //    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
     
     //alien vehicle
     alienVehicle = loadOBJ("./resources/alienvehicle/alienvehicle.obj");
@@ -318,6 +293,7 @@ void sendDataToOpenGL()
     //chicken
     chicken = loadOBJ("./resources/chicken/chicken.obj");
     load_Data(chicken, 7);
+    
     
     //skybox: 8
     GLfloat skyboxVertices[] = {
@@ -349,6 +325,10 @@ void sendDataToOpenGL()
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
     
+    //rock
+    rock = loadOBJ("./resources/rock/rock.obj");
+    load_Data(rock, 9);
+    
     
     //Load Textures
     textureSpacecraft_i.setupTexture("./resources/spacecraft/spacecraftTexture.bmp");
@@ -356,6 +336,7 @@ void sendDataToOpenGL()
     textureAlienVehicle.setupTexture("./resources/alienvehicle/colorful_alien_vehicleTexture.bmp");
     texturePlanet.setupTexture("./resources/planet/planetTexture.bmp");
     textureChicken.setupTexture("./resources/chicken/chickenTexture.bmp");
+    textureRock.setupTexture("./resources/rock/rockTexture.bmp");
     
     std::vector<std::string> faces
     {
@@ -367,6 +348,69 @@ void sendDataToOpenGL()
         "./resources/universe_skybox/back.bmp"
     };
     cubemapTexture = loadCubemap(faces);
+    
+
+    glm::mat4* modelMatrices;
+    modelMatrices = new glm::mat4[amount];
+    srand(glfwGetTime()); // initialize random seed
+    float radius = 150.0;
+    float offset = 25.0f;
+    
+    for (unsigned int i = 0; i < amount; i++)
+    {
+        glm::mat4 model = glm::mat4(1.0f);
+//        model = glm::translate(model, glm::vec3(1.0f,0.0f,0.0f));
+        // 1. translation: displace along circle with 'radius' in range [-offset, offset]
+        float angle = (float)i / (float)amount * 360.0f;
+        float displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+        float x = sin(angle) * radius + displacement;
+        displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+        float y = displacement * 0.4f; // keep height of asteroid field smaller compared to width of x and z
+        displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+        float z = cos(angle) * radius + displacement;
+        model = glm::translate(model, glm::vec3(x/10, y/10, z/10));
+
+        // 2. scale: Scale between 0.05 and 0.25f
+        float scale = (rand() % 20) / 100.0f + 0.05;
+        model = glm::scale(model, glm::vec3(scale));
+
+        // 3. rotation: add random rotation around a (semi)randomly picked rotation axis vector
+        float rotAngle = (rand() % 360);
+        model = glm::rotate(model, rotAngle, glm::vec3(0.4f, 0.6f, 0.8f));
+
+        
+        // 4. now add to list of matrices
+        modelMatrices[i] = model;
+//        modelMatrices[i] = glm::scale(glm::mat4(1.0f), glm::vec3(0.5f,0.5f,0.5f));
+    }
+    
+//    bind the buffer
+    
+        unsigned int rockBuffer;
+        glGenBuffers(1, &rockBuffer);
+        glBindBuffer(GL_ARRAY_BUFFER, rockBuffer);
+        glBufferData(GL_ARRAY_BUFFER, amount * sizeof(glm::mat4), &modelMatrices[0], GL_STATIC_DRAW);
+
+        unsigned int VAO = objects[9].vaoID;
+        glBindVertexArray(VAO);
+        // set attribute pointers for matrix (4 times vec4)
+        glEnableVertexAttribArray(3);
+        glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)0);
+        glEnableVertexAttribArray(4);
+        glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(sizeof(glm::vec4)));
+        glEnableVertexAttribArray(5);
+        glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(2 * sizeof(glm::vec4)));
+        glEnableVertexAttribArray(6);
+        glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(3 * sizeof(glm::vec4)));
+
+        glVertexAttribDivisor(3, 1);
+        glVertexAttribDivisor(4, 1);
+        glVertexAttribDivisor(5, 1);
+        glVertexAttribDivisor(6, 1);
+
+        glBindVertexArray(0);
+
+    
 }
 
 void initializedGL(void) //run only once
@@ -382,6 +426,7 @@ void initializedGL(void) //run only once
     //TODO: set up the vertex shader and fragment shader
     Shader0.setupShader("VertexShaderCode.glsl", "FragmentShaderCode.glsl");
     Shader1.setupShader("SBVertexShaderCode.glsl", "SBFragmentShaderCode.glsl");
+    Shader2.setupShader("RockVertexShaderCode.glsl", "RockFragmentShaderCode.glsl");
     cam = Camera(glm::vec3(0.0f, 1.5f, 3.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, -30.0f);
 
     glEnable(GL_DEPTH_TEST);
@@ -455,6 +500,7 @@ void paintGL(void)  //always run
     //planet setup
     glm::mat4 planetPrescaleMatrix = glm::scale(glm::mat4(1.0f),glm::vec3(1.5f,1.5f,1.5f));
     glm::mat4 planetTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f,0.0f,-40.0f));
+    glm::mat4 rockTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f,1.2f,-40.0f));
     
     //rendering start here
     glViewport(0, 0, SCR_WIDTH*2, SCR_HEIGHT*2);
@@ -561,7 +607,35 @@ void paintGL(void)  //always run
     glDrawElements(GL_TRIANGLES, (int)planet.indices.size(), GL_UNSIGNED_INT, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
     
+    Shader2.use();
     
+    projectionMatrixUniformLocation = glGetUniformLocation(Shader2.ID, "projectionMatrix");
+    glUniformMatrix4fv(projectionMatrixUniformLocation, 1, GL_FALSE, &projectionMatrix[0][0]);
+    
+    dirLightParameterUniformLocation = glGetUniformLocation(Shader2.ID, "dir_light_parameter");
+    glUniform1i(dirLightParameterUniformLocation, dir_light_parameter);
+    
+    lightPositionUniformLocation = glGetUniformLocation(Shader2.ID, "lightPositionWorld");
+    glUniform3fv(lightPositionUniformLocation, 1, &lightPosition[0]);
+    
+    eyePositionUniformLocation = glGetUniformLocation(Shader2.ID, "eyePositionWorld");
+    eyePosition = spacecraftTranslateMatrix * glm::vec4(0.0f, 1.5f, 3.0f, 1.0f);
+    glUniform3fv(eyePositionUniformLocation, 1, &eyePosition[0]);
+    
+
+    TextureID = glGetUniformLocation(Shader2.ID, "myTextureSampler0");
+    
+    glBindVertexArray(objects[9].vaoID);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[9].eboID);
+    modelTransformMatrix = glm::mat4(1.0f);
+//    planetPrescaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(10.0f,10.0f,10.0f));
+    modelTransformMatrix = rockTranslateMatrix * selfRotate * modelTransformMatrix;
+    glUniformMatrix4fv(modelTransformMatrixUniformLocation, 1, GL_FALSE, &modelTransformMatrix[0][0]);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, textureRock.ID);
+    glUniform1i(TextureID, 0);
+    glDrawElementsInstanced(GL_TRIANGLES, (int)rock.indices.size(), GL_UNSIGNED_INT, 0, amount);
+    glBindTexture(GL_TEXTURE_2D, 0);
     
 }
 
