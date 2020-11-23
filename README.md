@@ -5,8 +5,8 @@
 - [x] Self-rotation for the planet and the alien space vehicle
 - [x] Render a skybox
 - [x] Basic Light Rendering
-- [ ] Render an asteroid ring cloud
-- [ ] The rotation of the rocks
+- [x] Render an asteroid ring cloud
+- [x] The rotation of the rocks
 - [x] Correct viewpoint
 - [x] Use mouse to control the self-rotation of the spacecraft
 - [x] Use keyboard to control the translations of the spacecraft
