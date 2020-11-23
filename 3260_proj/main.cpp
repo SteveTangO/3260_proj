@@ -31,15 +31,20 @@ const int SCR_WIDTH = 800;
 const int SCR_HEIGHT = 600;
 int scale_parameter = 0;
 int dir_light_parameter = 2;
-int rotate_num = 0;
-int z_shift_num = 0;
-int y_shift_num = 0;
-float y_delta = 0.1f;
-float z_delta = 0.1f;
-float r_delta = 15.0f;
+float rotate_num = 0;
+float x_delta = 0.15f;
+float z_delta = 0.15f;
+float r_delta = 2.0f;
 bool firstmouse = true;
 float last_x;
 float last_y;
+float translate_x = 0.0f;
+float translate_z = 0.0f;
+bool key_w = false;
+bool key_s = false;
+bool key_a = false;
+bool key_d = false;
+glm::vec3 new_translate_vector = glm::vec3(0.0f);
 
 typedef struct object_struct{
     GLuint vaoID;
@@ -59,13 +64,6 @@ struct Model {
     std::vector<unsigned int> indices;
 };
 
-struct MouseController{
-    bool LEFT_BUTTON = false;
-    bool RIGHT_BUTTON = false;
-    double MOUSE_Clickx = 0.0, MOUSE_Clicky = 0.0;
-    double MOUSE_X = 0.0, MOUSE_Y = 0.0;
-    int click_time = glfwGetTime();
-};
 
 Object* objects = (Object*)malloc(sizeof(Object) * 20);
 
@@ -91,8 +89,6 @@ Model planet;
 Model chicken;
 
 Camera cam;
-
-MouseController mouseCrl;
 
 Model loadOBJ(const char* objPath)
 {
@@ -325,14 +321,14 @@ void sendDataToOpenGL()
     
     //skybox: 8
     GLfloat skyboxVertices[] = {
-        -10.0f, 10.0f, -10.0f, //0
-        -10.0f, -10.0f, -10.0f, //1
-        10.0f, -10.0f, -10.0f, //2
-        10.0f, 10.0f, -10.0f, //3
-        -10.0f, 10.0f, 10.0f, //4
-        -10.0f, -10.0f, 10.0f, //5
-        10.0f, -10.0f, 10.0f, //6
-        10.0f, 10.0f, 10.0f //7
+        -50.0f, 50.0f, -50.0f, //0
+        -50.0f, -50.0f, -50.0f, //1
+        50.0f, -50.0f, -50.0f, //2
+        50.0f, 50.0f, -50.0f, //3
+        -50.0f, 50.0f, 50.0f, //4
+        -50.0f, -50.0f, 50.0f, //5
+        50.0f, -50.0f, 50.0f, //6
+        50.0f, 50.0f, 50.0f //7
     };
     GLuint skyboxIndices[] = {
         2, 6, 7, 7, 3, 2,
@@ -386,7 +382,7 @@ void initializedGL(void) //run only once
     //TODO: set up the vertex shader and fragment shader
     Shader0.setupShader("VertexShaderCode.glsl", "FragmentShaderCode.glsl");
     Shader1.setupShader("SBVertexShaderCode.glsl", "SBFragmentShaderCode.glsl");
-    cam = Camera(glm::vec3(0.0f, 2.0f, 2.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, -30.0f);
+    cam = Camera(glm::vec3(0.0f, 1.5f, 3.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, -30.0f);
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
@@ -400,19 +396,47 @@ void paintGL(void)  //always run
     glm::mat4 modelTransformMatrix = glm::mat4(1.0f);
     GLint modelTransformMatrixUniformLocation = glGetUniformLocation(Shader0.ID, "modelTransformMatrix");
     
-    glm::mat4 modelRotateMatrix = glm::mat4(1.0f);
-    modelRotateMatrix = glm::rotate(modelRotateMatrix, glm::radians(90.0f + r_delta * rotate_num), glm::vec3(0.0f, 1.0f, 0.0f));
-    modelRotateMatrix = glm::rotate(modelRotateMatrix, glm::radians(-60.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-    glm::mat4 projectionMatrix = glm::perspective(glm::radians(60.0f), ((float)SCR_WIDTH) / SCR_HEIGHT, 0.1f, 100.0f);
-    glm::mat4 viewMatrix = cam.GetViewMatrix();
-    projectionMatrix = projectionMatrix * viewMatrix;
-    glm::vec3 lightPosition(0.5f, 2.0f, 2.0f);
     
     //spacecraft
     glm::mat4 spacecraftPreScaleMatrix = glm::mat4(1.0f);
     spacecraftPreScaleMatrix = glm::scale(spacecraftPreScaleMatrix, glm::vec3(0.002f,0.002f,0.002f));
     glm::mat4 spacecraftPreRotateMatrix = glm::mat4(1.0f);
     spacecraftPreRotateMatrix = glm::rotate(spacecraftPreRotateMatrix,glm::radians(180.0f), glm::vec3(1.0f,0.0f,0.0f));
+    glm::mat4 spacecraftRotateMatrix = glm::mat4(1.0f);
+    spacecraftRotateMatrix = glm::rotate(spacecraftRotateMatrix, glm::radians(rotate_num), glm::vec3(0.0f,1.0f,0.0f));
+    glm::vec3 localFrontVector = glm::vec3(0.0f,0.0f,-1.0f);
+    glm::vec3 localRightVector = glm::vec3(1.0f,0.0f,0.0f);
+    glm::vec3 worldFrontVector = glm::normalize(spacecraftRotateMatrix * spacecraftPreRotateMatrix * glm::vec4(localFrontVector, 1.0f));
+    glm::vec3 worldRightVector = glm::normalize(spacecraftRotateMatrix * spacecraftPreRotateMatrix * glm::vec4(localRightVector, 1.0f));
+    glm::mat4 spacecraftTranslateMatrix = glm::mat4(1.0f);
+    if(key_w){
+        new_translate_vector = glm::vec3(translate_x,0.0f,translate_z) - z_delta * worldFrontVector;
+        translate_x = new_translate_vector.x;
+        translate_z = new_translate_vector.z;
+    }
+    if(key_s){
+        new_translate_vector = glm::vec3(translate_x,0.0f,translate_z) + z_delta * worldFrontVector;
+        translate_x = new_translate_vector.x;
+        translate_z = new_translate_vector.z;
+    }
+    if(key_a){
+        new_translate_vector = glm::vec3(translate_x,0.0f,translate_z) - x_delta * worldRightVector;
+        translate_x = new_translate_vector.x;
+        translate_z = new_translate_vector.z;
+    }
+    if(key_d){
+        new_translate_vector = glm::vec3(translate_x,0.0f,translate_z) + x_delta * worldRightVector;
+        translate_x = new_translate_vector.x;
+        translate_z = new_translate_vector.z;
+    }
+    spacecraftTranslateMatrix = glm::translate(spacecraftTranslateMatrix, new_translate_vector);
+    
+    //projection
+    glm::mat4 projectionMatrix = glm::perspective(glm::radians(60.0f), ((float)SCR_WIDTH) / SCR_HEIGHT, 0.1f, 100.0f);
+    cam = Camera(spacecraftTranslateMatrix * spacecraftRotateMatrix * glm::vec4(0.0f, 1.5f, 3.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f - rotate_num, -15.0f);
+    glm::mat4 viewMatrix = cam.GetViewMatrix();
+    projectionMatrix =  projectionMatrix * viewMatrix;
+    glm::vec3 lightPosition(0.5f, 2.0f, 2.0f);
     
     //alienpeople
     glm::mat4 alienPeoplePrescaleMatrix = glm::scale(glm::mat4(1.0f),glm::vec3(0.25f,0.25f,0.25f));
@@ -459,7 +483,7 @@ void paintGL(void)  //always run
     glUniform3fv(lightPositionUniformLocation, 1, &lightPosition[0]);
     
     GLint eyePositionUniformLocation = glGetUniformLocation(Shader0.ID, "eyePositionWorld");
-    glm::vec3 eyePosition(0.0f, 2.0f, 2.0f);
+    glm::vec3 eyePosition = spacecraftTranslateMatrix * glm::vec4(0.0f, 1.5f, 3.0f, 1.0f);
     glUniform3fv(eyePositionUniformLocation, 1, &eyePosition[0]);
     
 
@@ -469,7 +493,7 @@ void paintGL(void)  //always run
     glBindVertexArray(objects[3].vaoID);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[3].eboID);
     modelTransformMatrix = glm::mat4(1.0f);
-    modelTransformMatrix = spacecraftPreRotateMatrix * spacecraftPreScaleMatrix * modelTransformMatrix;
+    modelTransformMatrix = spacecraftTranslateMatrix * spacecraftRotateMatrix * spacecraftPreRotateMatrix * spacecraftPreScaleMatrix * modelTransformMatrix;
     glUniformMatrix4fv(modelTransformMatrixUniformLocation, 1, GL_FALSE, &modelTransformMatrix[0][0]);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, textureSpacecraft_i.ID);
@@ -549,32 +573,24 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
     // Sets the mouse-button callback for the current window.
-    if(button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS){
-        mouseCrl.LEFT_BUTTON = true;
-        firstmouse = true;
-    }
-    if(button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE){
-        mouseCrl.LEFT_BUTTON = false;
-        mouseCrl.MOUSE_Clickx = 0;
-        mouseCrl.MOUSE_Clicky = 0;
-    }
+    
 }
 
 void cursor_position_callback(GLFWwindow* window, double x, double y)
 {
     // Sets the cursor position callback for the current window
-    if(mouseCrl.LEFT_BUTTON == true){
-        if (firstmouse){
-            last_x = x;
-            last_y = y;
-            firstmouse = false;
-        }
-        float xoffset = x - last_x;
-        float yoffset = last_y - y;
+    if (firstmouse){
         last_x = x;
         last_y = y;
-        cam.ProcessMouseMovement(xoffset, yoffset);
+        firstmouse = false;
     }
+    if(x < last_x){
+        rotate_num += r_delta;
+    }
+    if(x > last_x){
+        rotate_num -= r_delta;
+    }
+    last_x = x;
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
@@ -585,35 +601,32 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
     // Sets the Keyboard callback for the current window.
-    if (key == GLFW_KEY_Z && action == GLFW_PRESS) {
-        scale_parameter -= 1;
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS){
+        glfwSetWindowShouldClose(window, GL_TRUE);
     }
-    if(key == GLFW_KEY_X && action == GLFW_PRESS){
-        scale_parameter += 1;
+    if (key == GLFW_KEY_W){
+        key_w = true;
     }
-    if (key == GLFW_KEY_W && action == GLFW_PRESS) {
-        dir_light_parameter += 1;
+    if (key == GLFW_KEY_W && action == GLFW_RELEASE){
+        key_w = false;
     }
-    if(key == GLFW_KEY_S && action == GLFW_PRESS){
-        dir_light_parameter -= 1;
+    if(key == GLFW_KEY_S){
+        key_s = true;
     }
-    if (key == GLFW_KEY_I && action == GLFW_PRESS) {
-        y_shift_num += 1;
+    if (key == GLFW_KEY_S && action == GLFW_RELEASE){
+        key_s = false;
     }
-    if(key == GLFW_KEY_K && action == GLFW_PRESS){
-        y_shift_num -= 1;
+    if(key == GLFW_KEY_A){
+        key_a = true;
     }
-    if(key == GLFW_KEY_UP && action == GLFW_PRESS){
-        z_shift_num -= 1;
+    if (key == GLFW_KEY_A && action == GLFW_RELEASE){
+        key_a = false;
     }
-    if(key == GLFW_KEY_DOWN && action == GLFW_PRESS){
-        z_shift_num += 1;
+    if(key == GLFW_KEY_D){
+        key_d = true;
     }
-    if(key == GLFW_KEY_LEFT && action == GLFW_PRESS){
-        rotate_num += 1;
-    }
-    if(key == GLFW_KEY_RIGHT && action == GLFW_PRESS){
-        rotate_num -= 1;
+    if (key == GLFW_KEY_D && action == GLFW_RELEASE){
+        key_d = false;
     }
 }
 

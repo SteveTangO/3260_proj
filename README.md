@@ -7,9 +7,9 @@
 - [x] Basic Light Rendering
 - [ ] Render an asteroid ring cloud
 - [ ] The rotation of the rocks
-- [ ] Correct viewpoint
-- [ ] Use mouse to control the self-rotation of the spacecraft
-- [ ] Use keyboard to control the translations of the spacecraft
+- [x] Correct viewpoint
+- [x] Use mouse to control the self-rotation of the spacecraft
+- [x] Use keyboard to control the translations of the spacecraft
 - [ ] Collect foods
 - [ ] Change the texture of the alien vehicle after visiting
 - [ ] Change the texture of the spacecraft after the whole visiting
