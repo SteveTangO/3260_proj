@@ -1,10 +1,10 @@
 # 3260_proj
 ## To-do List
 ### Basic
-- [*] Render one planet, one spacecraft and at least three alien people in their space vehicle
-- [*] Self-rotation for the planet and the alien space vehicle
-- [*] Render a skybox
-- [*] Basic Light Rendering
+- [x] Render one planet, one spacecraft and at least three alien people in their space vehicle
+- [x] Self-rotation for the planet and the alien space vehicle
+- [x] Render a skybox
+- [x] Basic Light Rendering
 - [ ] Render an asteroid ring cloud
 - [ ] The rotation of the rocks
 - [ ] Correct viewpoint
@@ -17,3 +17,6 @@
 - [ ] Add another light source
 - [ ] Normal mapping for the plane
 - [ ] More kinds of foods to substitute the provided chicken
+### Others
+- [ ] PDF File
+- [ ] Demo
