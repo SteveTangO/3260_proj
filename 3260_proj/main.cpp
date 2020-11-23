@@ -29,11 +29,8 @@ Student Name:
 // screen setting
 const int SCR_WIDTH = 800;
 const int SCR_HEIGHT = 600;
-const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
 int scale_parameter = 0;
 int dir_light_parameter = 2;
-int dolphin_texture = 0;
-int sea_texture = 0;
 int rotate_num = 0;
 int z_shift_num = 0;
 int y_shift_num = 0;
@@ -71,15 +68,9 @@ struct MouseController{
 };
 
 Object* objects = (Object*)malloc(sizeof(Object) * 20);
-GLuint shadowFrameBuffer = 0;
 
 Shader Shader0;
 Shader Shader1;
-Texture Texture0;
-Texture Texture1;
-Texture Texture2;
-Texture Texture3;
-Texture Texture4;
 
 Texture textureSpacecraft_i;
 Texture textureSpacecraft_f;
@@ -87,16 +78,10 @@ Texture textureAlienPeople;
 Texture textureAlienVehicle;
 Texture texturePlanet;
 Texture textureChicken;
-
-unsigned int depthMapFBO;
-unsigned int depthMap;
+GLuint cubemapTexture;
 
 int spaceCraftForward = 0;
 int spaceCraftHorizontal = 0;
-
-Model dolphin;
-Model sea;
-Model tower;
 
 //newly added
 Model spaceCraft;
@@ -220,6 +205,38 @@ Model loadOBJ(const char* objPath)
     return model;
 }
 
+unsigned int loadCubemap(std::vector<std::string> faces)
+{
+    unsigned int textureID;
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+
+    int width, height, nrChannels;
+    for (unsigned int i = 0; i < faces.size(); i++)
+    {
+        unsigned char *data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
+        if (data)
+        {
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+                         0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data
+            );
+            stbi_image_free(data);
+        }
+        else
+        {
+            std::cout << "Cubemap tex failed to load at path: " << faces[i] << std::endl;
+            stbi_image_free(data);
+        }
+    }
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    return textureID;
+}
+
 //avoid repeating
 void load_Data(Model model, int id){
     glGenVertexArrays(1, &objects[id].vaoID);
@@ -256,88 +273,104 @@ void sendDataToOpenGL()
     //Load objects and bind to VAO and VBO
     //Load textures
     
-//spacecraft
+    //spacecraft
     spaceCraft = loadOBJ("./resources/spacecraft/spacecraft.obj");
     load_Data(spaceCraft, 3);
-////    spaceCraft = loadOBJ("./resources/alienpeople/alienpeople.obj");
-//    glGenVertexArrays(1, &objects[3].vaoID);
-//    glBindVertexArray(objects[3].vaoID);
-//    glGenBuffers(1, &objects[3].vboID);
-//    glBindBuffer(GL_ARRAY_BUFFER, objects[3].vboID);
-//    glBufferData(GL_ARRAY_BUFFER, spaceCraft.vertices.size() * sizeof(Vertex), &spaceCraft.vertices[0], GL_STATIC_DRAW);
-//    glGenBuffers(1, &objects[3].eboID);
-//    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[3].eboID);
-//    glBufferData(GL_ELEMENT_ARRAY_BUFFER, spaceCraft.indices.size() * sizeof(unsigned int), &spaceCraft.indices[0], GL_STATIC_DRAW);
-//    glEnableVertexAttribArray(0);
-//    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position));
-//    glEnableVertexAttribArray(1);
-//    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
-//    glEnableVertexAttribArray(2);
-//    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
+    //    spaceCraft = loadOBJ("./resources/alienpeople/alienpeople.obj");
+    //    glGenVertexArrays(1, &objects[3].vaoID);
+    //    glBindVertexArray(objects[3].vaoID);
+    //    glGenBuffers(1, &objects[3].vboID);
+    //    glBindBuffer(GL_ARRAY_BUFFER, objects[3].vboID);
+    //    glBufferData(GL_ARRAY_BUFFER, spaceCraft.vertices.size() * sizeof(Vertex), &spaceCraft.vertices[0], GL_STATIC_DRAW);
+    //    glGenBuffers(1, &objects[3].eboID);
+    //    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[3].eboID);
+    //    glBufferData(GL_ELEMENT_ARRAY_BUFFER, spaceCraft.indices.size() * sizeof(unsigned int), &spaceCraft.indices[0], GL_STATIC_DRAW);
+    //    glEnableVertexAttribArray(0);
+    //    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position));
+    //    glEnableVertexAttribArray(1);
+    //    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
+    //    glEnableVertexAttribArray(2);
+    //    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
     
 
-//alienpeople
+    //alienpeople
     alienPeople = loadOBJ("./resources/alienpeople/alienpeople.obj");
     load_Data(alienPeople, 4);
-//    glGenVertexArrays(1, &objects[4].vaoID);
-//    glBindVertexArray(objects[4].vaoID);
-//    glGenBuffers(1, &objects[4].vboID);
-//    glBindBuffer(GL_ARRAY_BUFFER, objects[4].vboID);
-//    glBufferData(GL_ARRAY_BUFFER, alienPeople.vertices.size() * sizeof(Vertex), &alienPeople.vertices[0], GL_STATIC_DRAW);
-//    glGenBuffers(1, &objects[4].eboID);
-//    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[4].eboID);
-//    glBufferData(GL_ELEMENT_ARRAY_BUFFER, alienPeople.indices.size() * sizeof(unsigned int), &alienPeople.indices[0], GL_STATIC_DRAW);
-//    glEnableVertexAttribArray(0);
-//    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position));
-//    glEnableVertexAttribArray(1);
-//    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
-//    glEnableVertexAttribArray(2);
-//    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
+    //    glGenVertexArrays(1, &objects[4].vaoID);
+    //    glBindVertexArray(objects[4].vaoID);
+    //    glGenBuffers(1, &objects[4].vboID);
+    //    glBindBuffer(GL_ARRAY_BUFFER, objects[4].vboID);
+    //    glBufferData(GL_ARRAY_BUFFER, alienPeople.vertices.size() * sizeof(Vertex), &alienPeople.vertices[0], GL_STATIC_DRAW);
+    //    glGenBuffers(1, &objects[4].eboID);
+    //    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[4].eboID);
+    //    glBufferData(GL_ELEMENT_ARRAY_BUFFER, alienPeople.indices.size() * sizeof(unsigned int), &alienPeople.indices[0], GL_STATIC_DRAW);
+    //    glEnableVertexAttribArray(0);
+    //    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position));
+    //    glEnableVertexAttribArray(1);
+    //    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
+    //    glEnableVertexAttribArray(2);
+    //    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
     
-//alien vehicle
+    //alien vehicle
     alienVehicle = loadOBJ("./resources/alienvehicle/alienvehicle.obj");
     load_Data(alienVehicle, 5);
     
-//planet
+    //planet
     planet = loadOBJ("./resources/planet/planet.obj");
     load_Data(planet, 6);
     
-//chicken
+    //chicken
     chicken = loadOBJ("./resources/chicken/chicken.obj");
     load_Data(chicken, 7);
     
+    //skybox: 8
+    GLfloat skyboxVertices[] = {
+        -10.0f, 10.0f, -10.0f, //0
+        -10.0f, -10.0f, -10.0f, //1
+        10.0f, -10.0f, -10.0f, //2
+        10.0f, 10.0f, -10.0f, //3
+        -10.0f, 10.0f, 10.0f, //4
+        -10.0f, -10.0f, 10.0f, //5
+        10.0f, -10.0f, 10.0f, //6
+        10.0f, 10.0f, 10.0f //7
+    };
+    GLuint skyboxIndices[] = {
+        2, 6, 7, 7, 3, 2,
+        1, 0, 4, 4, 5, 1,
+        0, 3, 7, 7, 4, 0,
+        1, 5, 6, 6, 2, 1,
+        1, 2, 3, 3, 0, 1,
+        5, 4, 7, 7, 6, 5
+    };
+    glGenVertexArrays(1, &objects[8].vaoID);
+    glBindVertexArray(objects[8].vaoID);
+    glGenBuffers(1, &objects[8].vboID);
+    glBindBuffer(GL_ARRAY_BUFFER, objects[8].vboID);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
+    glGenBuffers(1, &objects[8].eboID);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[8].eboID);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(skyboxIndices), &skyboxIndices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
     
     
-//    Texture0.setupTexture("./resources/dolphin/dolphin_01.jpg");
-//    Texture1.setupTexture("./resources/sea/sea_01.jpg");
-//    Texture2.setupTexture("./resources/dolphin/dolphin_02.jpg");
-//    Texture3.setupTexture("./resources/sea/sea_02.jpg");
-//    Texture4.setupTexture("./resources/tower/wood2.jpg");
-    
+    //Load Textures
     textureSpacecraft_i.setupTexture("./resources/spacecraft/spacecraftTexture.bmp");
     textureAlienPeople.setupTexture("./resources/alienpeople/alienTexture.bmp");
     textureAlienVehicle.setupTexture("./resources/alienvehicle/colorful_alien_vehicleTexture.bmp");
     texturePlanet.setupTexture("./resources/planet/planetTexture.bmp");
     textureChicken.setupTexture("./resources/chicken/chickenTexture.bmp");
     
-    
-    //Set up shadow texture
-    glGenFramebuffers(1, &depthMapFBO);
-    glGenTextures(1, &depthMap);
-    glBindTexture(GL_TEXTURE_2D, depthMap);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-    float borderColor[] = { 1.0, 1.0, 1.0, 1.0 };
-    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
-    // attach depth texture as FBO's depth buffer
-    glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
-    glDrawBuffer(GL_NONE);
-    glReadBuffer(GL_NONE);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    std::vector<std::string> faces
+    {
+        "./resources/universe_skybox/right.bmp",
+        "./resources/universe_skybox/left.bmp",
+        "./resources/universe_skybox/top.bmp",
+        "./resources/universe_skybox/bottom.bmp",
+        "./resources/universe_skybox/front.bmp",
+        "./resources/universe_skybox/back.bmp"
+    };
+    cubemapTexture = loadCubemap(faces);
 }
 
 void initializedGL(void) //run only once
@@ -352,7 +385,7 @@ void initializedGL(void) //run only once
     //TODO: set up the camera parameters
     //TODO: set up the vertex shader and fragment shader
     Shader0.setupShader("VertexShaderCode.glsl", "FragmentShaderCode.glsl");
-    Shader1.setupShader("ShadowVertexShaderCode.glsl", "ShadowFragmentShaderCode.glsl");
+    Shader1.setupShader("SBVertexShaderCode.glsl", "SBFragmentShaderCode.glsl");
     cam = Camera(glm::vec3(0.0f, 2.0f, 2.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, -30.0f);
 
     glEnable(GL_DEPTH_TEST);
@@ -367,15 +400,9 @@ void paintGL(void)  //always run
     glm::mat4 modelTransformMatrix = glm::mat4(1.0f);
     GLint modelTransformMatrixUniformLocation = glGetUniformLocation(Shader0.ID, "modelTransformMatrix");
     
-    glm::mat4 modelPreScaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(0.01f, 0.01f, 0.01f));
-    glm::mat4 modelScaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(pow(1.05f, scale_parameter), pow(1.05f, scale_parameter), pow(1.05f, scale_parameter)));
     glm::mat4 modelRotateMatrix = glm::mat4(1.0f);
     modelRotateMatrix = glm::rotate(modelRotateMatrix, glm::radians(90.0f + r_delta * rotate_num), glm::vec3(0.0f, 1.0f, 0.0f));
     modelRotateMatrix = glm::rotate(modelRotateMatrix, glm::radians(-60.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-    glm::mat4 modelPreTranslateMatrix = glm::mat4(1.0f);
-    glm::mat4 modelTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, z_delta * z_shift_num));
-    glm::mat4 boatModelPreTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-1.5f, -0.9f, -1.5f));
-    glm::mat4 boatModelPreScaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(0.3f, 0.3f, 0.3f));
     glm::mat4 projectionMatrix = glm::perspective(glm::radians(60.0f), ((float)SCR_WIDTH) / SCR_HEIGHT, 0.1f, 100.0f);
     glm::mat4 viewMatrix = cam.GetViewMatrix();
     projectionMatrix = projectionMatrix * viewMatrix;
@@ -405,73 +432,21 @@ void paintGL(void)  //always run
     glm::mat4 planetPrescaleMatrix = glm::scale(glm::mat4(1.0f),glm::vec3(1.5f,1.5f,1.5f));
     glm::mat4 planetTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f,0.0f,-40.0f));
     
-    //render the depth map
-    glClearColor(0.53f, 0.81f, 0.98f, 0.5f);
+    //rendering start here
+    glViewport(0, 0, SCR_WIDTH*2, SCR_HEIGHT*2);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
-    glm::mat4 lightProjection, lightView;
-    glm::mat4 lightSpaceMatrix;
-    float near_plane = 1.0f, far_plane = 7.5f;
-    lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
-    lightView = glm::lookAt(lightPosition, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
-    lightSpaceMatrix = lightProjection * lightView;
-    
+    //rendering the skybox
+    glDepthMask(GL_FALSE);
     Shader1.use();
-    GLuint depthMatrixLocation = glGetUniformLocation(Shader1.ID, "lightSpaceMatrix");
-    GLuint depthModelMatrixLocation = glGetUniformLocation(Shader1.ID, "modelTransformMatrix");
-    glUniformMatrix4fv(depthMatrixLocation, 1, GL_FALSE, &lightSpaceMatrix[0][0]);
+    glBindVertexArray(objects[8].vaoID);
+    GLint SBProjectionMatrixUniformLocation = glGetUniformLocation(Shader1.ID, "projectionMatrix");
+    glUniformMatrix4fv(SBProjectionMatrixUniformLocation, 1, GL_FALSE, &projectionMatrix[0][0]);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[8].eboID);
+    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+    glDepthMask(GL_TRUE);
     
-    glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
-    glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
-    glClear(GL_DEPTH_BUFFER_BIT);
-    
-    glActiveTexture(GL_TEXTURE0);
-    if(dolphin_texture == 0){
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, Texture0.ID);
-    }
-    else{
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, Texture2.ID);
-    }
-    modelTransformMatrix = modelTranslateMatrix * modelPreTranslateMatrix * modelRotateMatrix * modelScaleMatrix * modelPreScaleMatrix;
-    glUniformMatrix4fv(depthModelMatrixLocation, 1, GL_FALSE, &modelTransformMatrix[0][0]);
-    glBindVertexArray(objects[0].vaoID);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[0].eboID);
-    glDrawElements(GL_TRIANGLES, (int)dolphin.indices.size(), GL_UNSIGNED_INT, 0);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    
-    glActiveTexture(GL_TEXTURE0);
-    if(sea_texture == 0){
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, Texture1.ID);
-    }
-    else{
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, Texture3.ID);
-    }
-    modelTransformMatrix = glm::mat4(1.0f);
-    glUniformMatrix4fv(depthModelMatrixLocation, 1, GL_FALSE, &modelTransformMatrix[0][0]);
-    glBindVertexArray(objects[1].vaoID);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[1].eboID);
-    glDrawElements(GL_TRIANGLES, (int)sea.indices.size(), GL_UNSIGNED_INT, 0);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, Texture4.ID);
-    modelTransformMatrix = boatModelPreTranslateMatrix * boatModelPreScaleMatrix;
-    glUniformMatrix4fv(depthModelMatrixLocation, 1, GL_FALSE, &modelTransformMatrix[0][0]);
-    glBindVertexArray(objects[2].vaoID);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[2].eboID);
-    glDrawElements(GL_TRIANGLES, (int)tower.indices.size(), GL_UNSIGNED_INT, 0);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    
-    glViewport(0, 0, SCR_WIDTH*2, SCR_HEIGHT*2);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    
-    glViewport(0, 0, SCR_WIDTH*2, SCR_HEIGHT*2);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     Shader0.use();
     
     GLint projectionMatrixUniformLocation = glGetUniformLocation(Shader0.ID, "projectionMatrix");
@@ -487,12 +462,8 @@ void paintGL(void)  //always run
     glm::vec3 eyePosition(0.0f, 2.0f, 2.0f);
     glUniform3fv(eyePositionUniformLocation, 1, &eyePosition[0]);
     
-    GLuint lightSpaceMatrixLocation = glGetUniformLocation(Shader0.ID, "lightSpaceMatrix");
-    glUniformMatrix4fv(lightSpaceMatrixLocation, 1, GL_FALSE, &lightSpaceMatrix[0][0]);
-    
+
     GLuint TextureID = glGetUniformLocation(Shader0.ID, "myTextureSampler0");
-    GLuint shadowMapID = glGetUniformLocation(Shader0.ID, "shadowMap");
-    
     
     //space craft
     glBindVertexArray(objects[3].vaoID);
@@ -503,9 +474,6 @@ void paintGL(void)  //always run
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, textureSpacecraft_i.ID);
     glUniform1i(TextureID, 0);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, depthMap);
-    glUniform1i(shadowMapID, 1);
     glDrawElements(GL_TRIANGLES, (int)spaceCraft.indices.size(), GL_UNSIGNED_INT, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
     
@@ -528,9 +496,6 @@ void paintGL(void)  //always run
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, textureAlienPeople.ID);
         glUniform1i(TextureID, 0);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, depthMap);
-        glUniform1i(shadowMapID, 1);
         glDrawElements(GL_TRIANGLES, (int)alienPeople.indices.size(), GL_UNSIGNED_INT, 0);
         glBindTexture(GL_TEXTURE_2D, 0);
         
@@ -543,9 +508,6 @@ void paintGL(void)  //always run
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, textureAlienPeople.ID);
         glUniform1i(TextureID, 0);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, depthMap);
-        glUniform1i(shadowMapID, 1);
         glDrawElements(GL_TRIANGLES, (int)alienVehicle.indices.size(), GL_UNSIGNED_INT, 0);
         glBindTexture(GL_TEXTURE_2D, 0);
         
@@ -558,9 +520,6 @@ void paintGL(void)  //always run
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, textureChicken.ID);
         glUniform1i(TextureID, 0);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, depthMap);
-        glUniform1i(shadowMapID, 1);
         glDrawElements(GL_TRIANGLES, (int)chicken.indices.size(), GL_UNSIGNED_INT, 0);
         glBindTexture(GL_TEXTURE_2D, 0);
     }
@@ -575,9 +534,6 @@ void paintGL(void)  //always run
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texturePlanet.ID);
     glUniform1i(TextureID, 0);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, depthMap);
-    glUniform1i(shadowMapID, 1);
     glDrawElements(GL_TRIANGLES, (int)planet.indices.size(), GL_UNSIGNED_INT, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
     
@@ -646,18 +602,6 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     }
     if(key == GLFW_KEY_K && action == GLFW_PRESS){
         y_shift_num -= 1;
-    }
-    if(key == GLFW_KEY_1 && action == GLFW_PRESS){
-        dolphin_texture = 0;
-    }
-    if(key == GLFW_KEY_2 && action == GLFW_PRESS){
-        dolphin_texture = 1;
-    }
-    if(key == GLFW_KEY_3 && action == GLFW_PRESS){
-        sea_texture = 0;
-    }
-    if(key == GLFW_KEY_4 && action == GLFW_PRESS){
-        sea_texture = 1;
     }
     if(key == GLFW_KEY_UP && action == GLFW_PRESS){
         z_shift_num -= 1;

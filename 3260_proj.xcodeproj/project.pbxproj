@@ -30,7 +30,6 @@
 /* Begin PBXFileReference section */
 		6E68E7032566C8500056D6D8 /* Shader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Shader.cpp; sourceTree = "<group>"; };
 		6E68E7092566C97A0056D6D8 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = SOURCE_ROOT; };
-		6E70A00B254E9BBB00F03F67 /* ShadowFragmentShaderCode.glsl */ = {isa = PBXFileReference; lastKnownFileType = text; path = ShadowFragmentShaderCode.glsl; sourceTree = "<group>"; };
 		6EC621462546674700988D55 /* 3260_proj */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = 3260_proj; sourceTree = BUILT_PRODUCTS_DIR; };
 		6EC621492546674700988D55 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		6EC621562546681F00988D55 /* libglfw.3.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libglfw.3.3.dylib; path = ../../../../../usr/local/Cellar/glfw/3.3.2/lib/libglfw.3.3.dylib; sourceTree = "<group>"; };
@@ -41,7 +40,8 @@
 		6EC6216325466A0200988D55 /* VertexShaderCode.glsl */ = {isa = PBXFileReference; lastKnownFileType = text; path = VertexShaderCode.glsl; sourceTree = "<group>"; };
 		6EC62165254672C100988D55 /* readme.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = readme.txt; sourceTree = "<group>"; };
 		6EC6216A254E77D700988D55 /* Camera.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Camera.h; sourceTree = "<group>"; };
-		6EC6216C254E91B200988D55 /* ShadowVertexShaderCode.glsl */ = {isa = PBXFileReference; lastKnownFileType = text; path = ShadowVertexShaderCode.glsl; sourceTree = "<group>"; };
+		6ECBF48D256B4EC10011A8A2 /* SBVertexShaderCode.glsl */ = {isa = PBXFileReference; lastKnownFileType = text; path = SBVertexShaderCode.glsl; sourceTree = "<group>"; };
+		6ECBF48E256B4EDF0011A8A2 /* SBFragmentShaderCode.glsl */ = {isa = PBXFileReference; lastKnownFileType = text; path = SBFragmentShaderCode.glsl; sourceTree = "<group>"; };
 		E203E6E62568B31000C4653F /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
 		E2779C5A2567F48A006C4DD1 /* libGLEW.2.2.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libGLEW.2.2.0.dylib; path = ../../../../../usr/local/Cellar/glew/2.2.0/lib/libGLEW.2.2.0.dylib; sourceTree = "<group>"; };
 		E2F7DDD32567EA13004680DA /* glm.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = glm.hpp; path = ../../../../../usr/local/Cellar/glm/0.9.9.8/include/glm/glm.hpp; sourceTree = "<group>"; };
@@ -90,9 +90,9 @@
 				6EC6216225466A0200988D55 /* FragmentShaderCode.glsl */,
 				6EC62165254672C100988D55 /* readme.txt */,
 				6EC6216A254E77D700988D55 /* Camera.h */,
-				6EC6216C254E91B200988D55 /* ShadowVertexShaderCode.glsl */,
-				6E70A00B254E9BBB00F03F67 /* ShadowFragmentShaderCode.glsl */,
 				6E68E7092566C97A0056D6D8 /* README.md */,
+				6ECBF48D256B4EC10011A8A2 /* SBVertexShaderCode.glsl */,
+				6ECBF48E256B4EDF0011A8A2 /* SBFragmentShaderCode.glsl */,
 			);
 			path = 3260_proj;
 			sourceTree = "<group>";
