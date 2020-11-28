@@ -12,6 +12,8 @@ out vec2 UV;
 out vec3 normalWorld;
 out vec3 vertexPositionWorld;
 
+uniform sampler2D myTextureSampler1;
+
 void main()
 {
     vec4 v = vec4(position, 1.0f);
@@ -19,9 +21,6 @@ void main()
     gl_Position = projectionMatrix * newPosition;
     
     UV = vertexUV;
-    
-    
-//    normal_map = normalize(normal_map) * 2.0 - 1.0;
     
     vec4 normalTemp = modelTransformMatrix * vec4(normal, 0);
     normalWorld = normalTemp.xyz;

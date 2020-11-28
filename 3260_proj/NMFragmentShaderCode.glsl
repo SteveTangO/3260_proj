@@ -8,12 +8,12 @@ in vec2 UV;
 uniform vec3 lightPositionWorld;
 uniform vec3 eyePositionWorld;
 uniform sampler2D myTextureSampler0;
-uniform sampler2D myTextureSampler1;
+
 uniform int dir_light_parameter;
 
 void main()
 {
-//    vec3 normal_map = texture(myTextureSampler1, UV).rgb;
+    
     
     
     vec3 color = texture(myTextureSampler0, UV).rgb;
