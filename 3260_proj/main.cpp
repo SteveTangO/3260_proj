@@ -454,7 +454,7 @@ void initializedGL(void) //run only once
     Shader0.setupShader("VertexShaderCode.glsl", "FragmentShaderCode.glsl");
     Shader1.setupShader("SBVertexShaderCode.glsl", "SBFragmentShaderCode.glsl");
     Shader2.setupShader("RockVertexShaderCode.glsl", "RockFragmentShaderCode.glsl");
-    Shader3.setupShader("VertexShaderCode.glsl", "FragmentShaderCode.glsl");
+    Shader3.setupShader("NMVertexShaderCode.glsl", "NMFragmentShaderCode.glsl");
     cam = Camera(glm::vec3(0.0f, 1.5f, 3.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, -30.0f);
 
     glEnable(GL_DEPTH_TEST);
@@ -670,14 +670,25 @@ void paintGL(void)  //always run
     modelTransformMatrix = planetTranslateMatrix * selfRotate * planetPrescaleMatrix * modelTransformMatrix;
     glUniformMatrix4fv(modelTransformMatrixUniformLocation, 1, GL_FALSE, &modelTransformMatrix[0][0]);
     
-    glUniform1i(PlanetTextureID, 0);
-    glUniform1i(PlanetNormalMapID, 1);
-    
+    texturePlanet.bind(0);
+    Shader3.setInt("myTextureSampler0", 0);
+    texturePlanetNM.bind(1);
+    Shader3.setInt("myTextureSampler_normal", 1);
+    texturePlanetNM.bind(2);
+    Shader3.setInt("myTextureSampler1", 2);
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texturePlanet.ID);
-    
     glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, normalMap.ID);
+    glActiveTexture(GL_TEXTURE2);
+    
+//    glActiveTexture(GL_TEXTURE0);
+//    glBindTexture(GL_TEXTURE_2D, 0);
+//    glUniform1i(PlanetTextureID, 0);
+//
+//    glActiveTexture(GL_TEXTURE1);
+//    glBindTexture(GL_TEXTURE_2D, 1);
+//    glUniform1i(PlanetNormalMapID, 1);
+    
+    
     
     glDrawElements(GL_TRIANGLES, (int)planet.indices.size(), GL_UNSIGNED_INT, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
