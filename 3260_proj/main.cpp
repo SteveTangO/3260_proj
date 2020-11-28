@@ -621,7 +621,7 @@ void paintGL(void)  //always run
         if(collision_detection(spacecraftTranslateMatrix, chickenTranslateMatrix, COLLI_THRESHOLD_CHICKEN)){
             chicken_collision[k] = true;
         }
-        if(chicken_collision[3]){
+        if(chicken_collision[0] && chicken_collision[1] && chicken_collision[2] && chicken_collision[3]){
             swap_spacecraft_texture = true;
         }
         //chicken
@@ -664,7 +664,7 @@ void paintGL(void)  //always run
     glUniform3fv(lightPositionUniformLocation, 1, &lightPosition[0]);
     
     eyePositionUniformLocation = glGetUniformLocation(Shader2.ID, "eyePositionWorld");
-    eyePosition = spacecraftTranslateMatrix * glm::vec4(0.0f, 1.5f, 3.0f, 1.0f);
+    eyePosition = cam.Position;
     glUniform3fv(eyePositionUniformLocation, 1, &eyePosition[0]);
     
 

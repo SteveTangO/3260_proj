@@ -10,12 +10,12 @@
 - [x] Correct viewpoint
 - [x] Use mouse to control the self-rotation of the spacecraft
 - [x] Use keyboard to control the translations of the spacecraft
-- [ ] Collect foods
-- [ ] Change the texture of the alien vehicle after visiting
-- [ ] Change the texture of the spacecraft after the whole visiting
+- [x] Collect foods
+- [x] Change the texture of the alien vehicle after visiting
+- [x] Change the texture of the spacecraft after the whole visiting
 ### Bonus
 - [ ] Add another light source
-- [ ] Normal mapping for the plane
+- [x] Normal mapping for the plane
 - [ ] More kinds of foods to substitute the provided chicken
 ### Others
 - [ ] PDF File
