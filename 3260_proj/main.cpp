@@ -75,6 +75,7 @@ Object* objects = (Object*)malloc(sizeof(Object) * 20);
 Shader Shader0; //object shader
 Shader Shader1; //skybox shader
 Shader Shader2; //rock shader
+Shader Shader3; //planet
 
 Texture textureSpacecraft1;
 Texture textureSpacecraft2;
@@ -83,6 +84,8 @@ Texture textureAlienVehicle;
 Texture texturePlanet;
 Texture textureChicken;
 Texture textureRock;
+Texture texturePlanetNM;
+
 GLuint cubemapTexture;
 
 int spaceCraftForward = 0;
@@ -360,6 +363,7 @@ void sendDataToOpenGL()
     texturePlanet.setupTexture("./resources/planet/planetTexture.bmp");
     textureChicken.setupTexture("./resources/chicken/chickenTexture.bmp");
     textureRock.setupTexture("./resources/rock/rockTexture.bmp");
+    texturePlanetNM.setupTexture("./resources/planet/planetNormal.bmp");
     
     std::vector<std::string> faces
     {
@@ -450,6 +454,7 @@ void initializedGL(void) //run only once
     Shader0.setupShader("VertexShaderCode.glsl", "FragmentShaderCode.glsl");
     Shader1.setupShader("SBVertexShaderCode.glsl", "SBFragmentShaderCode.glsl");
     Shader2.setupShader("RockVertexShaderCode.glsl", "RockFragmentShaderCode.glsl");
+    Shader3.setupShader("VertexShaderCode.glsl", "FragmentShaderCode.glsl");
     cam = Camera(glm::vec3(0.0f, 1.5f, 3.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, -30.0f);
 
     glEnable(GL_DEPTH_TEST);
@@ -639,6 +644,24 @@ void paintGL(void)  //always run
         }
     }
     
+    Shader3.use();
+    
+    projectionMatrixUniformLocation = glGetUniformLocation(Shader2.ID, "projectionMatrix");
+    glUniformMatrix4fv(projectionMatrixUniformLocation, 1, GL_FALSE, &projectionMatrix[0][0]);
+    
+    dirLightParameterUniformLocation = glGetUniformLocation(Shader2.ID, "dir_light_parameter");
+    glUniform1i(dirLightParameterUniformLocation, dir_light_parameter);
+    
+    lightPositionUniformLocation = glGetUniformLocation(Shader2.ID, "lightPositionWorld");
+    glUniform3fv(lightPositionUniformLocation, 1, &lightPosition[0]);
+    
+    eyePositionUniformLocation = glGetUniformLocation(Shader2.ID, "eyePositionWorld");
+    eyePosition = cam.Position;
+    glUniform3fv(eyePositionUniformLocation, 1, &eyePosition[0]);
+    
+    GLuint PlanetTextureID = glGetUniformLocation(Shader3.ID, "myTextureSampler0");
+    GLuint PlanetNormalMapID = glGetUniformLocation(Shader3.ID, "myTextureSampler1");
+    
     //planet
     glm::mat4 selfRotate = glm::rotate(glm::mat4(1.0f), (float)glfwGetTime()/6, glm::vec3(0.0f,1.0f,0.0f));
     glBindVertexArray(objects[18].vaoID);
@@ -646,9 +669,16 @@ void paintGL(void)  //always run
     modelTransformMatrix = glm::mat4(1.0f);
     modelTransformMatrix = planetTranslateMatrix * selfRotate * planetPrescaleMatrix * modelTransformMatrix;
     glUniformMatrix4fv(modelTransformMatrixUniformLocation, 1, GL_FALSE, &modelTransformMatrix[0][0]);
+    
+    glUniform1i(PlanetTextureID, 0);
+    glUniform1i(PlanetNormalMapID, 1);
+    
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texturePlanet.ID);
-    glUniform1i(TextureID, 0);
+    
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, normalMap.ID);
+    
     glDrawElements(GL_TRIANGLES, (int)planet.indices.size(), GL_UNSIGNED_INT, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
     
