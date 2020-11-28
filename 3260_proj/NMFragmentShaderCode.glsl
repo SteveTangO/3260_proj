@@ -8,17 +8,14 @@ in vec2 UV;
 uniform vec3 lightPositionWorld;
 uniform vec3 eyePositionWorld;
 uniform sampler2D myTextureSampler0;
-uniform int dir_light_parameter;
-
-uniform sampler2D myTextureSampler_normal;
-
 uniform sampler2D myTextureSampler1;
+uniform int dir_light_parameter;
 
 void main()
 {
+//    vec3 normal_map = texture(myTextureSampler1, UV).rgb;
     
-    vec3 normal_map = texture(myTextureSampler0, UV).rbg;
-
+    
     vec3 color = texture(myTextureSampler0, UV).rgb;
     vec3 normal = normalize(normalWorld);
     vec3 lightColor = vec3(0.3);

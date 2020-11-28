@@ -518,11 +518,13 @@ void paintGL(void)  //always run
     glm::mat4 alienVehiclePrescaleMatrix = glm::scale(glm::mat4(1.0f),glm::vec3(0.15f,0.15f,0.15f));
     
     //alientranslate matrix
-    glm::mat4 alienTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-2.0f,0.0f,-4.0f));
+    glm::mat4 alienOriginalTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-2.0f,0.0f,-4.0f));
+    glm::mat4 alienTranslateMatrix = glm::mat4(1.0f);
     
     //chicken parameter
     glm::mat4 chickenPrescaleMatrix = glm::scale(glm::mat4(1.0f),glm::vec3(0.002f,0.002f,0.002f));
-    glm::mat4 chickenTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-0.5f,0.0f,-4.0f));
+    glm::mat4 chickenOriginalTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-0.5f,0.0f,-4.0f));
+    glm::mat4 chickenTranslateMatrix = glm::mat4(1.0f);
     glm::mat4 chickenPreRotateMatrix = glm::rotate(glm::mat4(1.0f),glm::radians(90.0f), glm::vec3(0.0f,0.0f,1.0f));
     
     //planet setup
@@ -585,10 +587,28 @@ void paintGL(void)  //always run
     for (int k = 0; k <= 3; k++)
     {
         glm::mat4 selfRotate = glm::rotate(glm::mat4(1.0f), (float)glfwGetTime()/6, glm::vec3(0.0f,1.0f,0.0f));
-        if (k > 0)
+        if (k >= 0)
         {
-            alienTranslateMatrix = glm::translate(alienTranslateMatrix, glm::vec3(0.0f,0.0f,-8.0f));
-            chickenTranslateMatrix = glm::translate(chickenTranslateMatrix, glm::vec3(0.0f,0.0f,-8.0f));
+            if (k==0)
+            {
+                alienTranslateMatrix = glm::translate(alienOriginalTranslateMatrix, glm::vec3(0.0f,0.0f,0.0f));
+                chickenTranslateMatrix = glm::translate(chickenOriginalTranslateMatrix, glm::vec3(-4.0f,0.0f,0.0f));
+            }
+            if (k==1)
+            {
+                alienTranslateMatrix = glm::translate(alienOriginalTranslateMatrix, glm::vec3(4.0f,0.0f,-8.0f));
+                chickenTranslateMatrix = glm::translate(chickenOriginalTranslateMatrix, glm::vec3(5.0f,0.0f,-8.0f));
+            }
+            if (k==2)
+            {
+                alienTranslateMatrix = glm::translate(alienOriginalTranslateMatrix, glm::vec3(-5.0f,0.0f,-16.0f));
+                chickenTranslateMatrix = glm::translate(chickenOriginalTranslateMatrix, glm::vec3(-8.0f,0.0f,-15.0f));
+            }
+            if (k==3)
+            {
+                alienTranslateMatrix = glm::translate(alienOriginalTranslateMatrix, glm::vec3(0.0f,0.0f,-24.0f));
+                chickenTranslateMatrix = glm::translate(chickenOriginalTranslateMatrix, glm::vec3(4.0f,0.0f,-25.0f));
+            }
         }
         
         //alienpeople
@@ -644,23 +664,25 @@ void paintGL(void)  //always run
         }
     }
     
+    GLuint PlanetTextureID = glGetUniformLocation(Shader3.ID, "myTextureSampler0");
+    GLuint PlanetNormalMapID = glGetUniformLocation(Shader3.ID, "myTextureSampler1");
+    
     Shader3.use();
     
-    projectionMatrixUniformLocation = glGetUniformLocation(Shader2.ID, "projectionMatrix");
+    projectionMatrixUniformLocation = glGetUniformLocation(Shader3.ID, "projectionMatrix");
     glUniformMatrix4fv(projectionMatrixUniformLocation, 1, GL_FALSE, &projectionMatrix[0][0]);
     
-    dirLightParameterUniformLocation = glGetUniformLocation(Shader2.ID, "dir_light_parameter");
+    dirLightParameterUniformLocation = glGetUniformLocation(Shader3.ID, "dir_light_parameter");
     glUniform1i(dirLightParameterUniformLocation, dir_light_parameter);
     
-    lightPositionUniformLocation = glGetUniformLocation(Shader2.ID, "lightPositionWorld");
+    lightPositionUniformLocation = glGetUniformLocation(Shader3.ID, "lightPositionWorld");
     glUniform3fv(lightPositionUniformLocation, 1, &lightPosition[0]);
     
-    eyePositionUniformLocation = glGetUniformLocation(Shader2.ID, "eyePositionWorld");
+    eyePositionUniformLocation = glGetUniformLocation(Shader3.ID, "eyePositionWorld");
     eyePosition = cam.Position;
     glUniform3fv(eyePositionUniformLocation, 1, &eyePosition[0]);
     
-    GLuint PlanetTextureID = glGetUniformLocation(Shader3.ID, "myTextureSampler0");
-    GLuint PlanetNormalMapID = glGetUniformLocation(Shader3.ID, "myTextureSampler1");
+   
     
     //planet
     glm::mat4 selfRotate = glm::rotate(glm::mat4(1.0f), (float)glfwGetTime()/6, glm::vec3(0.0f,1.0f,0.0f));
@@ -669,17 +691,19 @@ void paintGL(void)  //always run
     modelTransformMatrix = glm::mat4(1.0f);
     modelTransformMatrix = planetTranslateMatrix * selfRotate * planetPrescaleMatrix * modelTransformMatrix;
     glUniformMatrix4fv(modelTransformMatrixUniformLocation, 1, GL_FALSE, &modelTransformMatrix[0][0]);
-    
+    //1
     texturePlanet.bind(0);
     Shader3.setInt("myTextureSampler0", 0);
     texturePlanetNM.bind(1);
-    Shader3.setInt("myTextureSampler_normal", 1);
+    Shader3.setInt("myTextureSampler1", 1);
     texturePlanetNM.bind(2);
-    Shader3.setInt("myTextureSampler1", 2);
+    Shader3.setInt("myTextureSampler_normal", 2);
+
     glActiveTexture(GL_TEXTURE0);
     glActiveTexture(GL_TEXTURE1);
     glActiveTexture(GL_TEXTURE2);
     
+    //2
 //    glActiveTexture(GL_TEXTURE0);
 //    glBindTexture(GL_TEXTURE_2D, 0);
 //    glUniform1i(PlanetTextureID, 0);
@@ -688,10 +712,18 @@ void paintGL(void)  //always run
 //    glBindTexture(GL_TEXTURE_2D, 1);
 //    glUniform1i(PlanetNormalMapID, 1);
     
-    
+    //3
+//    glUniform1i(PlanetTextureID, 0);
+//    glUniform1i(PlanetNormalMapID, 1);
+//
+//    glActiveTexture(GL_TEXTURE0 + 0);
+//    glBindTexture(GL_TEXTURE_2D, texturePlanet.ID);
+//
+//    glActiveTexture(GL_TEXTURE0 + 1);
+//    glBindTexture(GL_TEXTURE_2D, texturePlanetNM.ID);
     
     glDrawElements(GL_TRIANGLES, (int)planet.indices.size(), GL_UNSIGNED_INT, 0);
-    glBindTexture(GL_TEXTURE_2D, 0);
+//    glBindTexture(GL_TEXTURE_2D, 0);
     
     Shader2.use();
     
