@@ -45,6 +45,10 @@ bool key_s = false;
 bool key_a = false;
 bool key_d = false;
 glm::vec3 new_translate_vector = glm::vec3(0.0f);
+const float COLLI_THRESHOLD_CHICKEN = 1.0f;
+bool swap_alien_vehicle_texture[4] = {false};
+bool chicken_collision[4] = {false};
+bool swap_spacecraft_texture = false;
 
 typedef struct object_struct{
     GLuint vaoID;
@@ -66,13 +70,14 @@ struct Model {
 
 
 Object* objects = (Object*)malloc(sizeof(Object) * 20);
+//skybox: 19, planet: 18, rocks: 17, spacecraft: 16, alien_people: 0-3, alien_vehicle: 4-7, chicken: 8-11
 
 Shader Shader0; //object shader
 Shader Shader1; //skybox shader
 Shader Shader2; //rock shader
 
-Texture textureSpacecraft_i;
-Texture textureSpacecraft_f;
+Texture textureSpacecraft1;
+Texture textureSpacecraft2;
 Texture textureAlienPeople;
 Texture textureAlienVehicle;
 Texture texturePlanet;
@@ -238,6 +243,15 @@ unsigned int loadCubemap(std::vector<std::string> faces)
     return textureID;
 }
 
+bool collision_detection(glm::mat4 matA, glm::mat4 matB, const float COLLI_THRESHOLD){
+    glm::vec4 vecA = matA * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+    glm::vec4 vecB = matB * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+    if(glm::distance(vecA, vecB) <= COLLI_THRESHOLD){
+        return true;
+    }
+    else return false;
+}
+
 //avoid repeating
 void load_Data(Model model, int id){
     glGenVertexArrays(1, &objects[id].vaoID);
@@ -274,28 +288,39 @@ void sendDataToOpenGL()
     //Load objects and bind to VAO and VBO
     //Load textures
     
-    //spacecraft
-    spaceCraft = loadOBJ("./resources/spacecraft/spacecraft.obj");
-    load_Data(spaceCraft, 3);
+    //skybox: 19, planet: 18, rocks: 17, spacecraft: 16, alien_people: 0-3, alien_vehicle: 4-7, chicken: 8-11
     
     //alienpeople
     alienPeople = loadOBJ("./resources/alienpeople/alienpeople.obj");
-    load_Data(alienPeople, 4);
+    for(int k = 0; k <= 3; k++){
+        load_Data(alienPeople, k);
+    }
     
     //alien vehicle
     alienVehicle = loadOBJ("./resources/alienvehicle/alienvehicle.obj");
-    load_Data(alienVehicle, 5);
-    
-    //planet
-    planet = loadOBJ("./resources/planet/planet.obj");
-    load_Data(planet, 6);
+    for(int k = 4; k <= 7; k++){
+        load_Data(alienVehicle, k);
+    }
     
     //chicken
     chicken = loadOBJ("./resources/chicken/chicken.obj");
-    load_Data(chicken, 7);
+    for(int k = 8; k <= 11; k++){
+        load_Data(chicken, k);
+    }
     
+    //spacecraft
+    spaceCraft = loadOBJ("./resources/spacecraft/spacecraft.obj");
+    load_Data(spaceCraft, 16);
     
-    //skybox: 8
+    //rock
+    rock = loadOBJ("./resources/rock/rock.obj");
+    load_Data(rock, 17);
+    
+    //planet
+    planet = loadOBJ("./resources/planet/planet.obj");
+    load_Data(planet, 18);
+    
+    //skybox
     GLfloat skyboxVertices[] = {
         -50.0f, 50.0f, -50.0f, //0
         -50.0f, -50.0f, -50.0f, //1
@@ -314,24 +339,22 @@ void sendDataToOpenGL()
         1, 2, 3, 3, 0, 1,
         5, 4, 7, 7, 6, 5
     };
-    glGenVertexArrays(1, &objects[8].vaoID);
-    glBindVertexArray(objects[8].vaoID);
-    glGenBuffers(1, &objects[8].vboID);
-    glBindBuffer(GL_ARRAY_BUFFER, objects[8].vboID);
+    glGenVertexArrays(1, &objects[19].vaoID);
+    glBindVertexArray(objects[19].vaoID);
+    glGenBuffers(1, &objects[19].vboID);
+    glBindBuffer(GL_ARRAY_BUFFER, objects[19].vboID);
     glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
-    glGenBuffers(1, &objects[8].eboID);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[8].eboID);
+    glGenBuffers(1, &objects[19].eboID);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[19].eboID);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(skyboxIndices), &skyboxIndices, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
     
-    //rock
-    rock = loadOBJ("./resources/rock/rock.obj");
-    load_Data(rock, 9);
     
     
     //Load Textures
-    textureSpacecraft_i.setupTexture("./resources/spacecraft/spacecraftTexture.bmp");
+    textureSpacecraft1.setupTexture("./resources/spacecraft/spacecraftTexture.bmp");
+    textureSpacecraft2.setupTexture("./resources/spacecraft/leisure_spacecraftTexture.bmp");
     textureAlienPeople.setupTexture("./resources/alienpeople/alienTexture.bmp");
     textureAlienVehicle.setupTexture("./resources/alienvehicle/colorful_alien_vehicleTexture.bmp");
     texturePlanet.setupTexture("./resources/planet/planetTexture.bmp");
@@ -391,7 +414,7 @@ void sendDataToOpenGL()
         glBindBuffer(GL_ARRAY_BUFFER, rockBuffer);
         glBufferData(GL_ARRAY_BUFFER, amount * sizeof(glm::mat4), &modelMatrices[0], GL_STATIC_DRAW);
 
-        unsigned int VAO = objects[9].vaoID;
+        unsigned int VAO = objects[17].vaoID;
         glBindVertexArray(VAO);
         // set attribute pointers for matrix (4 times vec4)
         glEnableVertexAttribArray(3);
@@ -435,12 +458,12 @@ void initializedGL(void) //run only once
 
 void paintGL(void)  //always run
 {
-    //for debug purpose
-//    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    
+    // for debug purpose
+    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    // skybox: 19, planet: 18, rocks: 17, spacecraft: 16, alien_people: 0-3, alien_vehicle: 4-7, chicken: 8-11
+
     glm::mat4 modelTransformMatrix = glm::mat4(1.0f);
     GLint modelTransformMatrixUniformLocation = glGetUniformLocation(Shader0.ID, "modelTransformMatrix");
-    
     
     //spacecraft
     glm::mat4 spacecraftPreScaleMatrix = glm::mat4(1.0f);
@@ -509,13 +532,14 @@ void paintGL(void)  //always run
     //rendering the skybox
     glDepthMask(GL_FALSE);
     Shader1.use();
-    glBindVertexArray(objects[8].vaoID);
+    glBindVertexArray(objects[19].vaoID);
     GLint SBProjectionMatrixUniformLocation = glGetUniformLocation(Shader1.ID, "projectionMatrix");
     glUniformMatrix4fv(SBProjectionMatrixUniformLocation, 1, GL_FALSE, &projectionMatrix[0][0]);
     glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[8].eboID);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[19].eboID);
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
     glDepthMask(GL_TRUE);
+    //end
     
     Shader0.use();
     
@@ -529,37 +553,42 @@ void paintGL(void)  //always run
     glUniform3fv(lightPositionUniformLocation, 1, &lightPosition[0]);
     
     GLint eyePositionUniformLocation = glGetUniformLocation(Shader0.ID, "eyePositionWorld");
-    glm::vec3 eyePosition = spacecraftTranslateMatrix * glm::vec4(0.0f, 1.5f, 3.0f, 1.0f);
+    glm::vec3 eyePosition = cam.Position;
     glUniform3fv(eyePositionUniformLocation, 1, &eyePosition[0]);
     
 
     GLuint TextureID = glGetUniformLocation(Shader0.ID, "myTextureSampler0");
     
     //space craft
-    glBindVertexArray(objects[3].vaoID);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[3].eboID);
+    glBindVertexArray(objects[16].vaoID);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[16].eboID);
     modelTransformMatrix = glm::mat4(1.0f);
     modelTransformMatrix = spacecraftTranslateMatrix * spacecraftRotateMatrix * spacecraftPreRotateMatrix * spacecraftPreScaleMatrix * modelTransformMatrix;
     glUniformMatrix4fv(modelTransformMatrixUniformLocation, 1, GL_FALSE, &modelTransformMatrix[0][0]);
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, textureSpacecraft_i.ID);
+    if(!swap_spacecraft_texture){
+        glBindTexture(GL_TEXTURE_2D, textureSpacecraft1.ID);
+    }
+    else{
+        glBindTexture(GL_TEXTURE_2D, textureSpacecraft2.ID);
+    }
     glUniform1i(TextureID, 0);
     glDrawElements(GL_TRIANGLES, (int)spaceCraft.indices.size(), GL_UNSIGNED_INT, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
     
     //alien bundle
-    int num;
-    for (num=0;num<=3;num++)
+    for (int k = 0; k <= 3; k++)
     {
         glm::mat4 selfRotate = glm::rotate(glm::mat4(1.0f), (float)glfwGetTime()/6, glm::vec3(0.0f,1.0f,0.0f));
-        if (num>0)
+        if (k > 0)
         {
             alienTranslateMatrix = glm::translate(alienTranslateMatrix, glm::vec3(0.0f,0.0f,-8.0f));
             chickenTranslateMatrix = glm::translate(chickenTranslateMatrix, glm::vec3(0.0f,0.0f,-8.0f));
         }
+        
         //alienpeople
-        glBindVertexArray(objects[4].vaoID);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[4].eboID);
+        glBindVertexArray(objects[k].vaoID);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[k].eboID);
         modelTransformMatrix = glm::mat4(1.0f);
         modelTransformMatrix = alienTranslateMatrix * alienPeoplePrescaleMatrix * selfRotate * modelTransformMatrix;
         glUniformMatrix4fv(modelTransformMatrixUniformLocation, 1, GL_FALSE, &modelTransformMatrix[0][0]);
@@ -570,34 +599,50 @@ void paintGL(void)  //always run
         glBindTexture(GL_TEXTURE_2D, 0);
         
         //alienvehicle
-        glBindVertexArray(objects[5].vaoID);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[5].eboID);
+        if(chicken_collision[k]){
+            swap_alien_vehicle_texture[k] = true;
+        }
+        glBindVertexArray(objects[k + 4].vaoID);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[k + 4].eboID);
         modelTransformMatrix = glm::mat4(1.0f);
         modelTransformMatrix = alienTranslateMatrix * alienVehiclePrescaleMatrix * selfRotate * modelTransformMatrix;
         glUniformMatrix4fv(modelTransformMatrixUniformLocation, 1, GL_FALSE, &modelTransformMatrix[0][0]);
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, textureAlienPeople.ID);
+        if(!swap_alien_vehicle_texture[k]){
+            glBindTexture(GL_TEXTURE_2D, textureAlienPeople.ID);
+        }
+        else{
+            glBindTexture(GL_TEXTURE_2D, textureAlienVehicle.ID);
+        }
         glUniform1i(TextureID, 0);
         glDrawElements(GL_TRIANGLES, (int)alienVehicle.indices.size(), GL_UNSIGNED_INT, 0);
         glBindTexture(GL_TEXTURE_2D, 0);
         
+        if(collision_detection(spacecraftTranslateMatrix, chickenTranslateMatrix, COLLI_THRESHOLD_CHICKEN)){
+            chicken_collision[k] = true;
+        }
+        if(chicken_collision[3]){
+            swap_spacecraft_texture = true;
+        }
         //chicken
-        glBindVertexArray(objects[7].vaoID);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[7].eboID);
-        modelTransformMatrix = glm::mat4(1.0f);
-        modelTransformMatrix = chickenTranslateMatrix * chickenPreRotateMatrix * chickenPrescaleMatrix * modelTransformMatrix;
-        glUniformMatrix4fv(modelTransformMatrixUniformLocation, 1, GL_FALSE, &modelTransformMatrix[0][0]);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, textureChicken.ID);
-        glUniform1i(TextureID, 0);
-        glDrawElements(GL_TRIANGLES, (int)chicken.indices.size(), GL_UNSIGNED_INT, 0);
-        glBindTexture(GL_TEXTURE_2D, 0);
+        if(!chicken_collision[k]){
+            glBindVertexArray(objects[k + 8].vaoID);
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[k + 8].eboID);
+            modelTransformMatrix = glm::mat4(1.0f);
+            modelTransformMatrix = chickenTranslateMatrix * chickenPreRotateMatrix * chickenPrescaleMatrix * modelTransformMatrix;
+            glUniformMatrix4fv(modelTransformMatrixUniformLocation, 1, GL_FALSE, &modelTransformMatrix[0][0]);
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, textureChicken.ID);
+            glUniform1i(TextureID, 0);
+            glDrawElements(GL_TRIANGLES, (int)chicken.indices.size(), GL_UNSIGNED_INT, 0);
+            glBindTexture(GL_TEXTURE_2D, 0);
+        }
     }
     
     //planet
     glm::mat4 selfRotate = glm::rotate(glm::mat4(1.0f), (float)glfwGetTime()/6, glm::vec3(0.0f,1.0f,0.0f));
-    glBindVertexArray(objects[6].vaoID);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[6].eboID);
+    glBindVertexArray(objects[18].vaoID);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[18].eboID);
     modelTransformMatrix = glm::mat4(1.0f);
     modelTransformMatrix = planetTranslateMatrix * selfRotate * planetPrescaleMatrix * modelTransformMatrix;
     glUniformMatrix4fv(modelTransformMatrixUniformLocation, 1, GL_FALSE, &modelTransformMatrix[0][0]);
@@ -625,8 +670,9 @@ void paintGL(void)  //always run
 
     TextureID = glGetUniformLocation(Shader2.ID, "myTextureSampler0");
     
-    glBindVertexArray(objects[9].vaoID);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[9].eboID);
+    //rocks
+    glBindVertexArray(objects[17].vaoID);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[17].eboID);
     modelTransformMatrix = glm::mat4(1.0f);
 //    planetPrescaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(10.0f,10.0f,10.0f));
     modelTransformMatrix = rockTranslateMatrix * selfRotate * modelTransformMatrix;
