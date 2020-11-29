@@ -12,10 +12,14 @@ out vec2 UV;
 out vec3 normalWorld;
 out vec3 vertexPositionWorld;
 
+uniform sampler2D myTextureSampler1;
+
 //uniform sampler2D myTextureSampler_1;
 
 void main()
 {
+    
+    vec3 coloradasadasda = texture(myTextureSampler1, UV).rgb;
     vec4 v = vec4(position, 1.0f);
     vec4 newPosition = modelTransformMatrix * v;
     gl_Position = projectionMatrix * newPosition;

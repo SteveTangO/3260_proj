@@ -713,8 +713,6 @@ void paintGL(void)  //always run
     
     Shader3.use();
     
-   
-    
     projectionMatrixUniformLocation = glGetUniformLocation(Shader3.ID, "projectionMatrix");
     glUniformMatrix4fv(projectionMatrixUniformLocation, 1, GL_FALSE, &projectionMatrix[0][0]);
     
@@ -741,16 +739,16 @@ void paintGL(void)  //always run
     modelTransformMatrix = planetTranslateMatrix * selfRotate * planetPrerotateMatrix * planetPrescaleMatrix * modelTransformMatrix;
     glUniformMatrix4fv(modelTransformMatrixUniformLocation, 1, GL_FALSE, &modelTransformMatrix[0][0]);
     //1
-//    texturePlanet.bind(0);
-//    Shader3.setInt("myTextureSampler0", 0);
-//    texturePlanetNM.bind(1);
-//    Shader3.setInt("myTextureSampler1", 1);
+//    texturePlanet.bind(2);
+//    Shader3.setInt("myTextureSampler0", 2);
+//    texturePlanetNM.bind(3);
+//    Shader3.setInt("myTextureSampler1", 3);
 ////    texturePlanetNM.bind(2);
 ////    Shader3.setInt("myTextureSampler_normal", 2);
 //
 //    glActiveTexture(GL_TEXTURE0);
 //    glActiveTexture(GL_TEXTURE1);
-////    glActiveTexture(GL_TEXTURE2);
+//    glActiveTexture(GL_TEXTURE2);
 //
     //2
     glActiveTexture(GL_TEXTURE0);
@@ -772,7 +770,7 @@ void paintGL(void)  //always run
 //    glBindTexture(GL_TEXTURE_2D, texturePlanetNM.ID);
     
     glDrawElements(GL_TRIANGLES, (int)planet.indices.size(), GL_UNSIGNED_INT, 0);
-//    glBindTexture(GL_TEXTURE_2D, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
     
     Shader2.use();
     
