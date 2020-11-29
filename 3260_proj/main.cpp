@@ -723,14 +723,15 @@ void paintGL(void)  //always run
     dirLightParameterUniformLocation = glGetUniformLocation(Shader3.ID, "dir_light_parameter");
     glUniform1i(dirLightParameterUniformLocation, dir_light_parameter);
     
-    lightPositionUniformLocation = glGetUniformLocation(Shader3.ID, "lightPositionWorld");
-    glUniform3fv(lightPositionUniformLocation, 1, &lightPosition[0]);
+    lightPosition1UniformLocation = glGetUniformLocation(Shader3.ID, "lightPositionWorld1");
+    glUniform3fv(lightPosition1UniformLocation, 1, &lightPosition1[0]);
+    lightPosition2UniformLocation = glGetUniformLocation(Shader3.ID, "lightPositionWorld2");
+    glUniform3fv(lightPosition2UniformLocation, 1, &lightPosition2[0]);
     
     eyePositionUniformLocation = glGetUniformLocation(Shader3.ID, "eyePositionWorld");
     eyePosition = cam.Position;
     glUniform3fv(eyePositionUniformLocation, 1, &eyePosition[0]);
     
-    TextureID = glGetUniformLocation(Shader3.ID, "myTextureSampler0");
     GLuint PlanetTextureID = glGetUniformLocation(Shader3.ID, "myTextureSampler0");
     GLuint PlanetNormalMapID = glGetUniformLocation(Shader3.ID, "myTextureSampler1");
    
@@ -742,36 +743,14 @@ void paintGL(void)  //always run
     modelTransformMatrix = glm::mat4(1.0f);
     modelTransformMatrix = planetTranslateMatrix * selfRotate * planetPrerotateMatrix * planetPrescaleMatrix * modelTransformMatrix;
     glUniformMatrix4fv(modelTransformMatrixUniformLocation, 1, GL_FALSE, &modelTransformMatrix[0][0]);
-    //1
-//    texturePlanet.bind(2);
-//    Shader3.setInt("myTextureSampler0", 2);
-//    texturePlanetNM.bind(3);
-//    Shader3.setInt("myTextureSampler1", 3);
-////    texturePlanetNM.bind(2);
-////    Shader3.setInt("myTextureSampler_normal", 2);
-//
-//    glActiveTexture(GL_TEXTURE0);
-//    glActiveTexture(GL_TEXTURE1);
-//    glActiveTexture(GL_TEXTURE2);
-//
-    //2
+
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texturePlanet.ID);
-    glUniform1i(TextureID, 0);
+    glUniform1i(PlanetTextureID, 0);
 
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, texturePlanetNM.ID);
     glUniform1i(PlanetNormalMapID, 1);
-    
-    //3
-//    glUniform1i(PlanetTextureID, 0);
-//    glUniform1i(PlanetNormalMapID, 1);
-//
-//    glActiveTexture(GL_TEXTURE0 + 0);
-//    glBindTexture(GL_TEXTURE_2D, texturePlanet.ID);
-//
-//    glActiveTexture(GL_TEXTURE0 + 1);
-//    glBindTexture(GL_TEXTURE_2D, texturePlanetNM.ID);
     
     glDrawElements(GL_TRIANGLES, (int)planet.indices.size(), GL_UNSIGNED_INT, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
