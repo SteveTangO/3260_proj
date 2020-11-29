@@ -51,8 +51,8 @@ bool chicken_collision[4] = {false};
 bool swap_spacecraft_texture = false;
 
 unsigned int amount_rock = 1500;
-unsigned int amount_pie = 8;
-unsigned int amount_tomato = 20;
+unsigned int amount_pie = 15;
+unsigned int amount_tomato = 15;
 
 
 typedef struct object_struct{
@@ -112,12 +112,12 @@ Model pie;
 
 Camera cam;
 
-void generateInstancedArray(unsigned int amount, int id)
+void generateInstancedArray(unsigned int amount, int id, float radius, int scale_m)
 {
     glm::mat4* modelMatrices;
     modelMatrices = new glm::mat4[amount];
     srand(glfwGetTime()); // initialize random seed
-    float radius = 150.0;
+//    float radius = 150.0;
     float offset = 25.0f;
     
     for (unsigned int i = 0; i < amount; i++)
@@ -135,7 +135,7 @@ void generateInstancedArray(unsigned int amount, int id)
         model = glm::translate(model, glm::vec3(x/10, y/10, z/10));
 
         // 2. scale: Scale between 0.05 and 0.25f
-        float scale = (rand() % 20) / 100.0f + 0.05;
+        float scale = (rand() % scale_m) / 100.0f + 0.05;
         model = glm::scale(model, glm::vec3(scale));
 
         // 3. rotation: add random rotation around a (semi)randomly picked rotation axis vector
@@ -462,9 +462,9 @@ void sendDataToOpenGL()
     };
     cubemapTexture = loadCubemap(faces);
     
-    generateInstancedArray(amount_rock, 17);
-    generateInstancedArray(amount_pie, 21);
-    generateInstancedArray(amount_tomato, 20);
+    generateInstancedArray(amount_rock, 17, 150, 20);
+    generateInstancedArray(amount_pie, 21, 250, 3);
+    generateInstancedArray(amount_tomato, 20, 350, 3);
     
     
 
@@ -566,6 +566,14 @@ void paintGL(void)  //always run
     glm::mat4 rockTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f,1.2f,-40.0f));
     glm::mat4 tomatoTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f,1.2f,-40.0f));
     glm::mat4 pieTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f,1.2f,-40.0f));
+    
+    //rotation
+    glm::mat4 selfRotate = glm::rotate(glm::mat4(1.0f), (float)glfwGetTime()/6, glm::vec3(0.0f,1.0f,0.0f));
+    glm::mat4 selfRotateTomato = glm::rotate(glm::mat4(1.0f), (float)glfwGetTime()/100, glm::vec3(0.0f,1.0f,0.0f));
+    glm::mat4 selfRotatePie = glm::rotate(glm::mat4(1.0f), (float)glfwGetTime()/100, glm::vec3(0.0f,1.0f,0.0f));
+    
+    glm::mat4 tomatoPrescale = glm::scale(glm::mat4(1.0f), glm::vec3(0.1f,0.1f,0.1f));
+    glm::mat4 piePrescale = glm::scale(glm::mat4(1.0f), glm::vec3(0.1f,0.1f,0.1f));
     
     //rendering start here
     glViewport(0, 0, SCR_WIDTH*2, SCR_HEIGHT*2);
@@ -720,7 +728,7 @@ void paintGL(void)  //always run
    
     
     //planet
-    glm::mat4 selfRotate = glm::rotate(glm::mat4(1.0f), (float)glfwGetTime()/6, glm::vec3(0.0f,1.0f,0.0f));
+    
     glBindVertexArray(objects[18].vaoID);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[18].eboID);
     modelTransformMatrix = glm::mat4(1.0f);
@@ -791,11 +799,12 @@ void paintGL(void)  //always run
     glDrawElementsInstanced(GL_TRIANGLES, (int)rock.indices.size(), GL_UNSIGNED_INT, 0, amount_rock);
     glBindTexture(GL_TEXTURE_2D, 0);
     
+    //tomato
     glBindVertexArray(objects[20].vaoID);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[20].eboID);
     modelTransformMatrix = glm::mat4(1.0f);
 //    planetPrescaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(10.0f,10.0f,10.0f));
-    modelTransformMatrix = tomatoTranslateMatrix * selfRotate * modelTransformMatrix;
+    modelTransformMatrix = tomatoTranslateMatrix * selfRotateTomato * modelTransformMatrix;
     glUniformMatrix4fv(modelTransformMatrixUniformLocation, 1, GL_FALSE, &modelTransformMatrix[0][0]);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, textureTomato.ID);
@@ -803,11 +812,12 @@ void paintGL(void)  //always run
     glDrawElementsInstanced(GL_TRIANGLES, (int)tomato.indices.size(), GL_UNSIGNED_INT, 0, amount_tomato);
     glBindTexture(GL_TEXTURE_2D, 0);
     
+    //pie
     glBindVertexArray(objects[21].vaoID);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[21].eboID);
     modelTransformMatrix = glm::mat4(1.0f);
 //    planetPrescaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(10.0f,10.0f,10.0f));
-    modelTransformMatrix = pieTranslateMatrix * selfRotate * modelTransformMatrix;
+    modelTransformMatrix = pieTranslateMatrix * selfRotatePie * modelTransformMatrix;
     glUniformMatrix4fv(modelTransformMatrixUniformLocation, 1, GL_FALSE, &modelTransformMatrix[0][0]);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texturePie.ID);
