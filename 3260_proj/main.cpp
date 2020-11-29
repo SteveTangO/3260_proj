@@ -50,6 +50,11 @@ bool swap_alien_vehicle_texture[4] = {false};
 bool chicken_collision[4] = {false};
 bool swap_spacecraft_texture = false;
 
+unsigned int amount_rock = 400;
+unsigned int amount_pie = 15;
+unsigned int amount_tomato = 15;
+
+
 typedef struct object_struct{
     GLuint vaoID;
     GLuint vboID;
@@ -69,12 +74,13 @@ struct Model {
 };
 
 
-Object* objects = (Object*)malloc(sizeof(Object) * 20);
-//skybox: 19, planet: 18, rocks: 17, spacecraft: 16, alien_people: 0-3, alien_vehicle: 4-7, chicken: 8-11
+Object* objects = (Object*)malloc(sizeof(Object) * 22);
+//skybox: 19, planet: 18, rocks: 17, spacecraft: 16, alien_people: 0-3, alien_vehicle: 4-7, chicken: 8-11, tomato: 20, pie: 21
 
 Shader Shader0; //object shader
 Shader Shader1; //skybox shader
 Shader Shader2; //rock shader
+Shader Shader3; //planet
 
 Texture textureSpacecraft1;
 Texture textureSpacecraft2;
@@ -83,6 +89,12 @@ Texture textureAlienVehicle;
 Texture texturePlanet;
 Texture textureChicken;
 Texture textureRock;
+Texture texturePlanetNM;
+
+Texture textureTomato;
+Texture texturePie;
+
+
 GLuint cubemapTexture;
 
 int spaceCraftForward = 0;
@@ -95,10 +107,74 @@ Model alienVehicle;
 Model planet;
 Model chicken;
 Model rock;
+Model tomato;
+Model pie;
 
 Camera cam;
 
-unsigned int amount = 1500;
+void generateInstancedArray(unsigned int amount, int id, float radius, int scale_m)
+{
+    glm::mat4* modelMatrices;
+    modelMatrices = new glm::mat4[amount];
+    srand(glfwGetTime()); // initialize random seed
+//    float radius = 150.0;
+    float offset = 25.0f;
+    
+    for (unsigned int i = 0; i < amount; i++)
+    {
+        glm::mat4 model = glm::mat4(1.0f);
+//        model = glm::translate(model, glm::vec3(1.0f,0.0f,0.0f));
+        // 1. translation: displace along circle with 'radius' in range [-offset, offset]
+        float angle = (float)i / (float)amount * 360.0f;
+        float displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+        float x = sin(angle) * radius + displacement;
+        displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+        float y = displacement * 0.4f; // keep height of asteroid field smaller compared to width of x and z
+        displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+        float z = cos(angle) * radius + displacement;
+        model = glm::translate(model, glm::vec3(x/10, y/10, z/10));
+
+        // 2. scale: Scale between 0.05 and 0.25f
+        float scale = (rand() % scale_m) / 100.0f + 0.05;
+        model = glm::scale(model, glm::vec3(scale));
+
+        // 3. rotation: add random rotation around a (semi)randomly picked rotation axis vector
+        float rotAngle = (rand() % 360);
+        model = glm::rotate(model, rotAngle, glm::vec3(0.4f, 0.6f, 0.8f));
+
+        
+        // 4. now add to list of matrices
+        modelMatrices[i] = model;
+//        modelMatrices[i] = glm::scale(glm::mat4(1.0f), glm::vec3(0.5f,0.5f,0.5f));
+    }
+    
+//    bind the buffer
+    
+        unsigned int rockBuffer;
+        glGenBuffers(1, &rockBuffer);
+        glBindBuffer(GL_ARRAY_BUFFER, rockBuffer);
+        glBufferData(GL_ARRAY_BUFFER, amount * sizeof(glm::mat4), &modelMatrices[0], GL_STATIC_DRAW);
+
+        unsigned int VAO = objects[id].vaoID;
+        glBindVertexArray(VAO);
+        // set attribute pointers for matrix (4 times vec4)
+        glEnableVertexAttribArray(3);
+        glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)0);
+        glEnableVertexAttribArray(4);
+        glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(sizeof(glm::vec4)));
+        glEnableVertexAttribArray(5);
+        glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(2 * sizeof(glm::vec4)));
+        glEnableVertexAttribArray(6);
+        glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(3 * sizeof(glm::vec4)));
+
+        glVertexAttribDivisor(3, 1);
+        glVertexAttribDivisor(4, 1);
+        glVertexAttribDivisor(5, 1);
+        glVertexAttribDivisor(6, 1);
+
+        glBindVertexArray(0);
+}
+
 
 Model loadOBJ(const char* objPath)
 {
@@ -288,7 +364,7 @@ void sendDataToOpenGL()
     //Load objects and bind to VAO and VBO
     //Load textures
     
-    //skybox: 19, planet: 18, rocks: 17, spacecraft: 16, alien_people: 0-3, alien_vehicle: 4-7, chicken: 8-11
+    //skybox: 19, planet: 18, rocks: 17, spacecraft: 16, alien_people: 0-3, alien_vehicle: 4-7, chicken: 8-11, tomato: 20, pie: 21
     
     //alienpeople
     alienPeople = loadOBJ("./resources/alienpeople/alienpeople.obj");
@@ -319,6 +395,16 @@ void sendDataToOpenGL()
     //planet
     planet = loadOBJ("./resources/planet/planet.obj");
     load_Data(planet, 18);
+    
+    //tomato
+    tomato = loadOBJ("./resources/tomato/tomato.obj");
+    load_Data(tomato, 20);
+    
+    //pie
+    pie = loadOBJ("./resources/pie/pie.obj");
+    load_Data(pie, 21);
+    
+    
     
     //skybox
     GLfloat skyboxVertices[] = {
@@ -360,6 +446,10 @@ void sendDataToOpenGL()
     texturePlanet.setupTexture("./resources/planet/planetTexture.bmp");
     textureChicken.setupTexture("./resources/chicken/chickenTexture.bmp");
     textureRock.setupTexture("./resources/rock/rockTexture.bmp");
+    texturePlanetNM.setupTexture("./resources/planet/planetNormal.bmp");
+    
+    texturePie.setupTexture("./resources/pie/pie_tex.jpg");
+    textureTomato.setupTexture("./resources/tomato/TomatoBeef.jpg");
     
     std::vector<std::string> faces
     {
@@ -372,69 +462,16 @@ void sendDataToOpenGL()
     };
     cubemapTexture = loadCubemap(faces);
     
-
-    glm::mat4* modelMatrices;
-    modelMatrices = new glm::mat4[amount];
-    srand(glfwGetTime()); // initialize random seed
-    float radius = 150.0;
-    float offset = 25.0f;
+    generateInstancedArray(amount_rock, 17, 150, 20);
+    generateInstancedArray(amount_pie, 21, 250, 3);
+    generateInstancedArray(amount_tomato, 20, 350, 3);
     
-    for (unsigned int i = 0; i < amount; i++)
-    {
-        glm::mat4 model = glm::mat4(1.0f);
-//        model = glm::translate(model, glm::vec3(1.0f,0.0f,0.0f));
-        // 1. translation: displace along circle with 'radius' in range [-offset, offset]
-        float angle = (float)i / (float)amount * 360.0f;
-        float displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
-        float x = sin(angle) * radius + displacement;
-        displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
-        float y = displacement * 0.4f; // keep height of asteroid field smaller compared to width of x and z
-        displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
-        float z = cos(angle) * radius + displacement;
-        model = glm::translate(model, glm::vec3(x/10, y/10, z/10));
-
-        // 2. scale: Scale between 0.05 and 0.25f
-        float scale = (rand() % 20) / 100.0f + 0.05;
-        model = glm::scale(model, glm::vec3(scale));
-
-        // 3. rotation: add random rotation around a (semi)randomly picked rotation axis vector
-        float rotAngle = (rand() % 360);
-        model = glm::rotate(model, rotAngle, glm::vec3(0.4f, 0.6f, 0.8f));
-
-        
-        // 4. now add to list of matrices
-        modelMatrices[i] = model;
-//        modelMatrices[i] = glm::scale(glm::mat4(1.0f), glm::vec3(0.5f,0.5f,0.5f));
-    }
     
-//    bind the buffer
-    
-        unsigned int rockBuffer;
-        glGenBuffers(1, &rockBuffer);
-        glBindBuffer(GL_ARRAY_BUFFER, rockBuffer);
-        glBufferData(GL_ARRAY_BUFFER, amount * sizeof(glm::mat4), &modelMatrices[0], GL_STATIC_DRAW);
-
-        unsigned int VAO = objects[17].vaoID;
-        glBindVertexArray(VAO);
-        // set attribute pointers for matrix (4 times vec4)
-        glEnableVertexAttribArray(3);
-        glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)0);
-        glEnableVertexAttribArray(4);
-        glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(sizeof(glm::vec4)));
-        glEnableVertexAttribArray(5);
-        glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(2 * sizeof(glm::vec4)));
-        glEnableVertexAttribArray(6);
-        glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(3 * sizeof(glm::vec4)));
-
-        glVertexAttribDivisor(3, 1);
-        glVertexAttribDivisor(4, 1);
-        glVertexAttribDivisor(5, 1);
-        glVertexAttribDivisor(6, 1);
-
-        glBindVertexArray(0);
 
     
 }
+
+
 
 void initializedGL(void) //run only once
 {
@@ -450,6 +487,7 @@ void initializedGL(void) //run only once
     Shader0.setupShader("VertexShaderCode.glsl", "FragmentShaderCode.glsl");
     Shader1.setupShader("SBVertexShaderCode.glsl", "SBFragmentShaderCode.glsl");
     Shader2.setupShader("RockVertexShaderCode.glsl", "RockFragmentShaderCode.glsl");
+    Shader3.setupShader("NMVertexShaderCode.glsl", "NMFragmentShaderCode.glsl");
     cam = Camera(glm::vec3(0.0f, 1.5f, 3.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, -30.0f);
 
     glEnable(GL_DEPTH_TEST);
@@ -514,17 +552,31 @@ void paintGL(void)  //always run
     glm::mat4 alienVehiclePrescaleMatrix = glm::scale(glm::mat4(1.0f),glm::vec3(0.15f,0.15f,0.15f));
     
     //alientranslate matrix
-    glm::mat4 alienTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-2.0f,0.0f,-4.0f));
+    glm::mat4 alienOriginalTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-2.0f,0.0f,-4.0f));
+    glm::mat4 alienTranslateMatrix = glm::mat4(1.0f);
     
     //chicken parameter
     glm::mat4 chickenPrescaleMatrix = glm::scale(glm::mat4(1.0f),glm::vec3(0.002f,0.002f,0.002f));
-    glm::mat4 chickenTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-0.5f,0.0f,-4.0f));
+    glm::mat4 chickenOriginalTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-0.5f,0.0f,-4.0f));
+    glm::mat4 chickenTranslateMatrix = glm::mat4(1.0f);
     glm::mat4 chickenPreRotateMatrix = glm::rotate(glm::mat4(1.0f),glm::radians(90.0f), glm::vec3(0.0f,0.0f,1.0f));
     
     //planet setup
     glm::mat4 planetPrescaleMatrix = glm::scale(glm::mat4(1.0f),glm::vec3(1.5f,1.5f,1.5f));
+    glm::mat4 planetPrerotateMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f,0.0f,0.0f));
+    
     glm::mat4 planetTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f,0.0f,-40.0f));
     glm::mat4 rockTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f,1.2f,-40.0f));
+    glm::mat4 tomatoTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f,1.2f,-40.0f));
+    glm::mat4 pieTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f,1.2f,-40.0f));
+    
+    //rotation
+    glm::mat4 selfRotate = glm::rotate(glm::mat4(1.0f), (float)glfwGetTime()/6, glm::vec3(0.0f,1.0f,0.0f));
+    glm::mat4 selfRotateTomato = glm::rotate(glm::mat4(1.0f), (float)glfwGetTime()/100, glm::vec3(0.0f,1.0f,0.0f));
+    glm::mat4 selfRotatePie = glm::rotate(glm::mat4(1.0f), (float)glfwGetTime()/100, glm::vec3(0.0f,1.0f,0.0f));
+    
+    glm::mat4 tomatoPrescale = glm::scale(glm::mat4(1.0f), glm::vec3(0.1f,0.1f,0.1f));
+    glm::mat4 piePrescale = glm::scale(glm::mat4(1.0f), glm::vec3(0.1f,0.1f,0.1f));
     
     //rendering start here
     glViewport(0, 0, SCR_WIDTH*2, SCR_HEIGHT*2);
@@ -584,10 +636,28 @@ void paintGL(void)  //always run
     for (int k = 0; k <= 3; k++)
     {
         glm::mat4 selfRotate = glm::rotate(glm::mat4(1.0f), (float)glfwGetTime()/6, glm::vec3(0.0f,1.0f,0.0f));
-        if (k > 0)
+        if (k >= 0)
         {
-            alienTranslateMatrix = glm::translate(alienTranslateMatrix, glm::vec3(0.0f,0.0f,-8.0f));
-            chickenTranslateMatrix = glm::translate(chickenTranslateMatrix, glm::vec3(0.0f,0.0f,-8.0f));
+            if (k==0)
+            {
+                alienTranslateMatrix = glm::translate(alienOriginalTranslateMatrix, glm::vec3(0.0f,0.0f,0.0f));
+                chickenTranslateMatrix = glm::translate(chickenOriginalTranslateMatrix, glm::vec3(-4.0f,0.0f,0.0f));
+            }
+            if (k==1)
+            {
+                alienTranslateMatrix = glm::translate(alienOriginalTranslateMatrix, glm::vec3(4.0f,0.0f,-8.0f));
+                chickenTranslateMatrix = glm::translate(chickenOriginalTranslateMatrix, glm::vec3(6.0f,0.0f,-8.0f));
+            }
+            if (k==2)
+            {
+                alienTranslateMatrix = glm::translate(alienOriginalTranslateMatrix, glm::vec3(-4.0f,0.0f,-16.0f));
+                chickenTranslateMatrix = glm::translate(chickenOriginalTranslateMatrix, glm::vec3(-8.0f,0.0f,-15.0f));
+            }
+            if (k==3)
+            {
+                alienTranslateMatrix = glm::translate(alienOriginalTranslateMatrix, glm::vec3(0.0f,0.0f,-24.0f));
+                chickenTranslateMatrix = glm::translate(chickenOriginalTranslateMatrix, glm::vec3(2.0f,0.0f,-25.0f));
+            }
         }
         
         //alienpeople
@@ -643,16 +713,66 @@ void paintGL(void)  //always run
         }
     }
     
+    
+    
+    Shader3.use();
+    
+    projectionMatrixUniformLocation = glGetUniformLocation(Shader3.ID, "projectionMatrix");
+    glUniformMatrix4fv(projectionMatrixUniformLocation, 1, GL_FALSE, &projectionMatrix[0][0]);
+    
+    dirLightParameterUniformLocation = glGetUniformLocation(Shader3.ID, "dir_light_parameter");
+    glUniform1i(dirLightParameterUniformLocation, dir_light_parameter);
+    
+    lightPositionUniformLocation = glGetUniformLocation(Shader3.ID, "lightPositionWorld");
+    glUniform3fv(lightPositionUniformLocation, 1, &lightPosition[0]);
+    
+    eyePositionUniformLocation = glGetUniformLocation(Shader3.ID, "eyePositionWorld");
+    eyePosition = cam.Position;
+    glUniform3fv(eyePositionUniformLocation, 1, &eyePosition[0]);
+    
+    TextureID = glGetUniformLocation(Shader3.ID, "myTextureSampler0");
+    GLuint PlanetTextureID = glGetUniformLocation(Shader3.ID, "myTextureSampler0");
+    GLuint PlanetNormalMapID = glGetUniformLocation(Shader3.ID, "myTextureSampler1");
+   
+    
     //planet
-    glm::mat4 selfRotate = glm::rotate(glm::mat4(1.0f), (float)glfwGetTime()/6, glm::vec3(0.0f,1.0f,0.0f));
+    
     glBindVertexArray(objects[18].vaoID);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[18].eboID);
     modelTransformMatrix = glm::mat4(1.0f);
-    modelTransformMatrix = planetTranslateMatrix * selfRotate * planetPrescaleMatrix * modelTransformMatrix;
+    modelTransformMatrix = planetTranslateMatrix * selfRotate * planetPrerotateMatrix * planetPrescaleMatrix * modelTransformMatrix;
     glUniformMatrix4fv(modelTransformMatrixUniformLocation, 1, GL_FALSE, &modelTransformMatrix[0][0]);
+    //1
+//    texturePlanet.bind(2);
+//    Shader3.setInt("myTextureSampler0", 2);
+//    texturePlanetNM.bind(3);
+//    Shader3.setInt("myTextureSampler1", 3);
+////    texturePlanetNM.bind(2);
+////    Shader3.setInt("myTextureSampler_normal", 2);
+//
+//    glActiveTexture(GL_TEXTURE0);
+//    glActiveTexture(GL_TEXTURE1);
+//    glActiveTexture(GL_TEXTURE2);
+//
+    //2
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texturePlanet.ID);
     glUniform1i(TextureID, 0);
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, texturePlanetNM.ID);
+    glUniform1i(PlanetNormalMapID, 1);
+    
+    //3
+//    glUniform1i(PlanetTextureID, 0);
+//    glUniform1i(PlanetNormalMapID, 1);
+//
+//    glActiveTexture(GL_TEXTURE0 + 0);
+//    glBindTexture(GL_TEXTURE_2D, texturePlanet.ID);
+//
+//    glActiveTexture(GL_TEXTURE0 + 1);
+//    glBindTexture(GL_TEXTURE_2D, texturePlanetNM.ID);
+    
     glDrawElements(GL_TRIANGLES, (int)planet.indices.size(), GL_UNSIGNED_INT, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
     
@@ -687,7 +807,33 @@ void paintGL(void)  //always run
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, textureRock.ID);
     glUniform1i(TextureID, 0);
-    glDrawElementsInstanced(GL_TRIANGLES, (int)rock.indices.size(), GL_UNSIGNED_INT, 0, amount);
+    glDrawElementsInstanced(GL_TRIANGLES, (int)rock.indices.size(), GL_UNSIGNED_INT, 0, amount_rock);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    
+    //tomato
+    glBindVertexArray(objects[20].vaoID);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[20].eboID);
+    modelTransformMatrix = glm::mat4(1.0f);
+//    planetPrescaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(10.0f,10.0f,10.0f));
+    modelTransformMatrix = tomatoTranslateMatrix * selfRotateTomato * modelTransformMatrix;
+    glUniformMatrix4fv(modelTransformMatrixUniformLocation, 1, GL_FALSE, &modelTransformMatrix[0][0]);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, textureTomato.ID);
+    glUniform1i(TextureID, 0);
+    glDrawElementsInstanced(GL_TRIANGLES, (int)tomato.indices.size(), GL_UNSIGNED_INT, 0, amount_tomato);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    
+    //pie
+    glBindVertexArray(objects[21].vaoID);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[21].eboID);
+    modelTransformMatrix = glm::mat4(1.0f);
+//    planetPrescaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(10.0f,10.0f,10.0f));
+    modelTransformMatrix = pieTranslateMatrix * selfRotatePie * modelTransformMatrix;
+    glUniformMatrix4fv(modelTransformMatrixUniformLocation, 1, GL_FALSE, &modelTransformMatrix[0][0]);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texturePie.ID);
+    glUniform1i(TextureID, 0);
+    glDrawElementsInstanced(GL_TRIANGLES, (int)pie.indices.size(), GL_UNSIGNED_INT, 0, amount_pie);
     glBindTexture(GL_TEXTURE_2D, 0);
     
 }

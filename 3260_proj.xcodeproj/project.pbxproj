@@ -43,6 +43,8 @@
 		6ECBF48D256B4EC10011A8A2 /* SBVertexShaderCode.glsl */ = {isa = PBXFileReference; lastKnownFileType = text; path = SBVertexShaderCode.glsl; sourceTree = "<group>"; };
 		6ECBF48E256B4EDF0011A8A2 /* SBFragmentShaderCode.glsl */ = {isa = PBXFileReference; lastKnownFileType = text; path = SBFragmentShaderCode.glsl; sourceTree = "<group>"; };
 		E203E6E62568B31000C4653F /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
+		E22968CE25724855001A158F /* NMFragmentShaderCode.glsl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = NMFragmentShaderCode.glsl; sourceTree = "<group>"; };
+		E22968CF25724855001A158F /* NMVertexShaderCode.glsl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = NMVertexShaderCode.glsl; sourceTree = "<group>"; };
 		E2428D17256B9A2C00F710A6 /* RockFragmentShaderCode.glsl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = RockFragmentShaderCode.glsl; sourceTree = "<group>"; };
 		E2428D18256B9A2C00F710A6 /* RockVertexShaderCode.glsl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = RockVertexShaderCode.glsl; sourceTree = "<group>"; };
 		E2779C5A2567F48A006C4DD1 /* libGLEW.2.2.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libGLEW.2.2.0.dylib; path = ../../../../../usr/local/Cellar/glew/2.2.0/lib/libGLEW.2.2.0.dylib; sourceTree = "<group>"; };
@@ -83,6 +85,8 @@
 		6EC621482546674700988D55 /* 3260_proj */ = {
 			isa = PBXGroup;
 			children = (
+				E22968CE25724855001A158F /* NMFragmentShaderCode.glsl */,
+				E22968CF25724855001A158F /* NMVertexShaderCode.glsl */,
 				E2428D17256B9A2C00F710A6 /* RockFragmentShaderCode.glsl */,
 				E2428D18256B9A2C00F710A6 /* RockVertexShaderCode.glsl */,
 				6EC621492546674700988D55 /* main.cpp */,
