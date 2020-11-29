@@ -12,7 +12,7 @@ out vec2 UV;
 out vec3 normalWorld;
 out vec3 vertexPositionWorld;
 
-uniform sampler2D myTextureSampler1;
+//uniform sampler2D myTextureSampler_1;
 
 void main()
 {

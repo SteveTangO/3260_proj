@@ -50,7 +50,7 @@ bool swap_alien_vehicle_texture[4] = {false};
 bool chicken_collision[4] = {false};
 bool swap_spacecraft_texture = false;
 
-unsigned int amount_rock = 1500;
+unsigned int amount_rock = 400;
 unsigned int amount_pie = 15;
 unsigned int amount_tomato = 15;
 
@@ -562,6 +562,8 @@ void paintGL(void)  //always run
     
     //planet setup
     glm::mat4 planetPrescaleMatrix = glm::scale(glm::mat4(1.0f),glm::vec3(1.5f,1.5f,1.5f));
+    glm::mat4 planetPrerotateMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f,0.0f,0.0f));
+    
     glm::mat4 planetTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f,0.0f,-40.0f));
     glm::mat4 rockTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f,1.2f,-40.0f));
     glm::mat4 tomatoTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f,1.2f,-40.0f));
@@ -707,10 +709,11 @@ void paintGL(void)  //always run
         }
     }
     
-    GLuint PlanetTextureID = glGetUniformLocation(Shader3.ID, "myTextureSampler0");
-    GLuint PlanetNormalMapID = glGetUniformLocation(Shader3.ID, "myTextureSampler1");
+    
     
     Shader3.use();
+    
+   
     
     projectionMatrixUniformLocation = glGetUniformLocation(Shader3.ID, "projectionMatrix");
     glUniformMatrix4fv(projectionMatrixUniformLocation, 1, GL_FALSE, &projectionMatrix[0][0]);
@@ -725,6 +728,9 @@ void paintGL(void)  //always run
     eyePosition = cam.Position;
     glUniform3fv(eyePositionUniformLocation, 1, &eyePosition[0]);
     
+    TextureID = glGetUniformLocation(Shader3.ID, "myTextureSampler0");
+    GLuint PlanetTextureID = glGetUniformLocation(Shader3.ID, "myTextureSampler0");
+    GLuint PlanetNormalMapID = glGetUniformLocation(Shader3.ID, "myTextureSampler1");
    
     
     //planet
@@ -732,28 +738,28 @@ void paintGL(void)  //always run
     glBindVertexArray(objects[18].vaoID);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, objects[18].eboID);
     modelTransformMatrix = glm::mat4(1.0f);
-    modelTransformMatrix = planetTranslateMatrix * selfRotate * planetPrescaleMatrix * modelTransformMatrix;
+    modelTransformMatrix = planetTranslateMatrix * selfRotate * planetPrerotateMatrix * planetPrescaleMatrix * modelTransformMatrix;
     glUniformMatrix4fv(modelTransformMatrixUniformLocation, 1, GL_FALSE, &modelTransformMatrix[0][0]);
     //1
-    texturePlanet.bind(0);
-    Shader3.setInt("myTextureSampler0", 0);
-    texturePlanetNM.bind(1);
-    Shader3.setInt("myTextureSampler1", 1);
-//    texturePlanetNM.bind(2);
-//    Shader3.setInt("myTextureSampler_normal", 2);
-
-    glActiveTexture(GL_TEXTURE0);
-    glActiveTexture(GL_TEXTURE1);
-//    glActiveTexture(GL_TEXTURE2);
-    
-    //2
-//    glActiveTexture(GL_TEXTURE0);
-//    glBindTexture(GL_TEXTURE_2D, 0);
-//    glUniform1i(PlanetTextureID, 0);
+//    texturePlanet.bind(0);
+//    Shader3.setInt("myTextureSampler0", 0);
+//    texturePlanetNM.bind(1);
+//    Shader3.setInt("myTextureSampler1", 1);
+////    texturePlanetNM.bind(2);
+////    Shader3.setInt("myTextureSampler_normal", 2);
 //
+//    glActiveTexture(GL_TEXTURE0);
 //    glActiveTexture(GL_TEXTURE1);
-//    glBindTexture(GL_TEXTURE_2D, 1);
-//    glUniform1i(PlanetNormalMapID, 1);
+////    glActiveTexture(GL_TEXTURE2);
+//
+    //2
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texturePlanet.ID);
+    glUniform1i(TextureID, 0);
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, texturePlanetNM.ID);
+    glUniform1i(PlanetNormalMapID, 1);
     
     //3
 //    glUniform1i(PlanetTextureID, 0);
