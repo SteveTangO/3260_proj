@@ -14,7 +14,7 @@
 - [x] Change the texture of the alien vehicle after visiting
 - [x] Change the texture of the spacecraft after the whole visiting
 ### Bonus
-- [ ] Add another light source
+- [x] Add another light source
 - [x] Normal mapping for the plane
 - [ ] More kinds of foods to substitute the provided chicken
 ### Others

@@ -504,7 +504,8 @@ void paintGL(void)  //always run
     cam = Camera(spacecraftTranslateMatrix * spacecraftRotateMatrix * glm::vec4(0.0f, 1.5f, 3.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f - rotate_num, -15.0f);
     glm::mat4 viewMatrix = cam.GetViewMatrix();
     projectionMatrix =  projectionMatrix * viewMatrix;
-    glm::vec3 lightPosition(0.5f, 2.0f, 2.0f);
+    glm::vec3 lightPosition1(0.5f, 2.0f, 2.0f);
+    glm::vec3 lightPosition2(-1.0f, 2.0f, -5.0f);
     
     //alienpeople
     glm::mat4 alienPeoplePrescaleMatrix = glm::scale(glm::mat4(1.0f),glm::vec3(0.25f,0.25f,0.25f));
@@ -549,8 +550,11 @@ void paintGL(void)  //always run
     GLint dirLightParameterUniformLocation = glGetUniformLocation(Shader0.ID, "dir_light_parameter");
     glUniform1i(dirLightParameterUniformLocation, dir_light_parameter);
     
-    GLint lightPositionUniformLocation = glGetUniformLocation(Shader0.ID, "lightPositionWorld");
-    glUniform3fv(lightPositionUniformLocation, 1, &lightPosition[0]);
+    GLint lightPosition1UniformLocation = glGetUniformLocation(Shader0.ID, "lightPositionWorld1");
+    glUniform3fv(lightPosition1UniformLocation, 1, &lightPosition1[0]);
+    
+    GLint lightPosition2UniformLocation = glGetUniformLocation(Shader0.ID, "lightPositionWorld2");
+    glUniform3fv(lightPosition2UniformLocation, 1, &lightPosition2[0]);
     
     GLint eyePositionUniformLocation = glGetUniformLocation(Shader0.ID, "eyePositionWorld");
     glm::vec3 eyePosition = cam.Position;
@@ -660,8 +664,11 @@ void paintGL(void)  //always run
     dirLightParameterUniformLocation = glGetUniformLocation(Shader2.ID, "dir_light_parameter");
     glUniform1i(dirLightParameterUniformLocation, dir_light_parameter);
     
-    lightPositionUniformLocation = glGetUniformLocation(Shader2.ID, "lightPositionWorld");
-    glUniform3fv(lightPositionUniformLocation, 1, &lightPosition[0]);
+    lightPosition1UniformLocation = glGetUniformLocation(Shader2.ID, "lightPositionWorld1");
+    glUniform3fv(lightPosition1UniformLocation, 1, &lightPosition1[0]);
+    
+    lightPosition2UniformLocation = glGetUniformLocation(Shader2.ID, "lightPositionWorld2");
+    glUniform3fv(lightPosition2UniformLocation, 1, &lightPosition2[0]);
     
     eyePositionUniformLocation = glGetUniformLocation(Shader2.ID, "eyePositionWorld");
     eyePosition = cam.Position;
