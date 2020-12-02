@@ -21,8 +21,8 @@ void main()
     vec3 normal = normalize(normalWorld);
     
     //range transform
-    normal = texture(myTextureSampler1, normalUV).rgb;
-    normal = normalize(normal * 2.0f - 1.0f);
+    //normal = texture(myTextureSampler1, normalUV).rgb;
+    //normal = normalize(normal * 2.0f - 1.0f);
     vec3 lightColor1 = vec3(0.3);
     vec3 lightColor2 = vec3(0.1, 0.4, 0.1);
     
